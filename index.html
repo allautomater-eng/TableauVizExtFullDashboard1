@@ -4,217 +4,85 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Superstore Analytics</title>
-
-<!-- Tableau Extensions API -->
 <script src="https://extensions.tableausoftware.com/lib/tableau.extensions.1.latest.js"></script>
-<!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-
 <style>
-  :root {
-    --blue:   #185FA5;
-    --teal:   #1D9E75;
-    --coral:  #D85A30;
-    --amber:  #BA7517;
-    --purple: #534AB7;
-    --pink:   #D4537E;
-    --bg:     #F7F8FA;
-    --surface:#FFFFFF;
-    --border: rgba(0,0,0,0.08);
-    --text:   #1A1A2E;
-    --muted:  #6B7280;
-    --radius: 10px;
-    --shadow: 0 1px 4px rgba(0,0,0,0.08);
-  }
+:root{--blue:#185FA5;--teal:#1D9E75;--coral:#D85A30;--amber:#BA7517;--purple:#534AB7;--pink:#D4537E;--bg:#F7F8FA;--surface:#FFFFFF;--border:rgba(0,0,0,0.08);--text:#1A1A2E;--muted:#6B7280;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;overflow-x:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text)}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:1px}
+#status-badge{font-size:11px;padding:4px 10px;border-radius:20px;background:#FFF3CD;color:#856404;border:1px solid #FFECB5;transition:all .3s}
+#status-badge.connected{background:#D1FAE5;color:#065F46;border-color:#A7F3D0}
+.filter-section{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-group label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);white-space:nowrap}
+.pill-row{display:flex;flex-wrap:wrap;gap:4px}
+.pill{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none}
+.pill.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.pill:hover:not(.active){border-color:var(--blue);color:var(--blue)}
+.filter-divider{width:1px;height:20px;background:var(--border)}
+.btn-reset{font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-reset:hover{border-color:var(--blue);color:var(--blue)}
+.main{padding:14px 16px}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
+.kpi-sales::before{background:var(--blue)}.kpi-profit::before{background:var(--teal)}.kpi-orders::before{background:var(--purple)}.kpi-disc::before{background:var(--amber)}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:700;color:var(--text);line-height:1}
+.kpi-sub{font-size:11px;margin-top:5px;color:var(--muted)}
+.kpi-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:30px;opacity:.06}
+.row2{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-title{font-size:12px;font-weight:600;color:var(--text)}
+.card-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#EEF2FF;color:var(--purple)}
+.chart-wrap{position:relative;width:100%}
+.seg-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.seg-label{width:80px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0}
+.seg-track{flex:1;height:10px;background:#F1F3F5;border-radius:5px;overflow:hidden}
+.seg-fill{height:100%;border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.seg-val{width:60px;font-size:11px;color:var(--text);font-weight:600}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border);padding:4px 8px;text-align:left}
+.tbl td{font-size:11px;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#F7F8FA}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
+.badge-pos{background:#D1FAE5;color:#065F46}.badge-neg{background:#FEE2E2;color:#991B1B}
+#loading{position:fixed;inset:0;background:rgba(247,248,250,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px}
+.spinner{width:36px;height:36px;border:3px solid #E5E7EB;border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--muted)}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── DEBUG PANEL ── */
+#debug-panel{display:none;background:#1e1e2e;color:#cdd6f4;font-family:monospace;font-size:11px;padding:12px 16px;margin:10px 16px;border-radius:8px;border:1px solid #45475a;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+#debug-panel.show{display:block}
+#debug-toggle{font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;margin-left:8px}
+#debug-toggle:hover{border-color:#534AB7;color:#534AB7}
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 13px;
-    overflow-x: hidden;
-  }
+/* ── NOTICE BANNER ── */
+.notice{border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;display:none}
+.notice.show{display:block}
+.notice-demo{background:#FFF8E1;border:1px solid #FFE082;color:#795548}
+.notice-live{background:#D1FAE5;border:1px solid #A7F3D0;color:#065F46}
+.notice-error{background:#FEE2E2;border:1px solid #FECACA;color:#991B1B}
 
-  /* ── TOP BAR ── */
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .topbar-left { display: flex; align-items: center; gap: 10px; }
-  .topbar-logo {
-    width: 28px; height: 28px;
-    background: var(--blue);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 14px; font-weight: 700;
-  }
-  .topbar-title { font-size: 14px; font-weight: 600; color: var(--text); }
-  .topbar-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
-
-  #status-badge {
-    font-size: 11px; padding: 4px 10px; border-radius: 20px;
-    background: #FFF3CD; color: #856404; border: 1px solid #FFECB5;
-    transition: all .3s;
-  }
-  #status-badge.connected {
-    background: #D1FAE5; color: #065F46; border-color: #A7F3D0;
-  }
-
-  /* ── FILTER ROW ── */
-  .filter-section {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 16px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-  }
-  .filter-group { display: flex; align-items: center; gap: 6px; }
-  .filter-group label {
-    font-size: 10px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .5px; color: var(--muted); white-space: nowrap;
-  }
-  .pill-row { display: flex; flex-wrap: wrap; gap: 4px; }
-  .pill {
-    font-size: 11px; padding: 3px 9px; border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface); color: var(--muted);
-    cursor: pointer; transition: all .15s; white-space: nowrap;
-    user-select: none;
-  }
-  .pill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
-  .pill:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
-
-  .filter-divider { width: 1px; height: 20px; background: var(--border); }
-
-  .btn-reset {
-    font-size: 11px; padding: 4px 12px; border-radius: 6px;
-    border: 1px solid var(--border); background: var(--surface);
-    color: var(--muted); cursor: pointer; transition: all .15s; white-space: nowrap;
-  }
-  .btn-reset:hover { border-color: var(--blue); color: var(--blue); }
-
-  /* ── MAIN LAYOUT ── */
-  .main { padding: 14px 16px; }
-
-  /* ── KPI ROW ── */
-  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-  .kpi {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    box-shadow: var(--shadow);
-    position: relative; overflow: hidden;
-  }
-  .kpi::before {
-    content: ''; position: absolute; top: 0; left: 0;
-    width: 3px; height: 100%; border-radius: 3px 0 0 3px;
-  }
-  .kpi-sales::before   { background: var(--blue); }
-  .kpi-profit::before  { background: var(--teal); }
-  .kpi-orders::before  { background: var(--purple); }
-  .kpi-disc::before    { background: var(--amber); }
-  .kpi-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 6px; }
-  .kpi-val   { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
-  .kpi-sub   { font-size: 11px; margin-top: 5px; color: var(--muted); }
-  .kpi-icon  { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 30px; opacity: .06; }
-
-  /* ── CHART GRIDS ── */
-  .row2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    box-shadow: var(--shadow);
-  }
-  .card-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  .card-title { font-size: 12px; font-weight: 600; color: var(--text); }
-  .card-badge {
-    font-size: 10px; padding: 2px 8px; border-radius: 10px;
-    background: #EEF2FF; color: var(--purple);
-  }
-  .chart-wrap { position: relative; width: 100%; }
-
-  /* ── SEGMENT BARS ── */
-  .seg-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .seg-label { width: 76px; font-size: 11px; color: var(--muted); text-align: right; flex-shrink: 0; }
-  .seg-track { flex: 1; height: 10px; background: #F1F3F5; border-radius: 5px; overflow: hidden; }
-  .seg-fill  { height: 100%; border-radius: 5px; transition: width .5s cubic-bezier(.4,0,.2,1); }
-  .seg-val   { width: 56px; font-size: 11px; color: var(--text); font-weight: 600; }
-
-  /* ── TOP PRODUCTS TABLE ── */
-  .tbl { width: 100%; border-collapse: collapse; }
-  .tbl th {
-    font-size: 10px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .5px; color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    padding: 4px 8px; text-align: left;
-  }
-  .tbl td { font-size: 11px; padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
-  .tbl tr:last-child td { border-bottom: none; }
-  .tbl tr:hover td { background: #F7F8FA; }
-  .badge {
-    display: inline-block; font-size: 10px; padding: 2px 7px;
-    border-radius: 10px; font-weight: 600;
-  }
-  .badge-pos { background: #D1FAE5; color: #065F46; }
-  .badge-neg { background: #FEE2E2; color: #991B1B; }
-
-  /* ── LOADING OVERLAY ── */
-  #loading {
-    position: fixed; inset: 0; background: rgba(247,248,250,.92);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 9999; gap: 12px;
-  }
-  .spinner {
-    width: 36px; height: 36px; border: 3px solid #E5E7EB;
-    border-top-color: var(--blue); border-radius: 50%;
-    animation: spin .8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 13px; color: var(--muted); }
-
-  /* ── DEMO MODE NOTICE ── */
-  #demo-notice {
-    display: none;
-    background: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px;
-    padding: 8px 14px; margin-bottom: 12px; font-size: 11px; color: #795548;
-  }
-  #demo-notice.show { display: block; }
-
-  @media (max-width: 720px) {
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
-    .row2, .row3 { grid-template-columns: 1fr; }
-    .filter-section { gap: 8px; }
-  }
+@media(max-width:720px){.kpi-row{grid-template-columns:repeat(2,1fr)}.row2,.row3{grid-template-columns:1fr}.filter-section{gap:8px}}
 </style>
 </head>
 <body>
 
-<!-- Loading overlay -->
 <div id="loading">
   <div class="spinner"></div>
-  <div class="loading-text">Connecting to Tableau…</div>
+  <div class="loading-text" id="loading-text">Connecting to Tableau…</div>
 </div>
 
-<!-- Top bar -->
 <div class="topbar">
   <div class="topbar-left">
     <div class="topbar-logo">S</div>
@@ -223,136 +91,69 @@
       <div class="topbar-sub" id="data-source-name">Tableau Viz Extension</div>
     </div>
   </div>
-  <span id="status-badge">⏳ Connecting…</span>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span id="status-badge">⏳ Connecting…</span>
+    <button id="debug-toggle" onclick="toggleDebug()">🔍 Debug</button>
+  </div>
 </div>
 
-<!-- Filter slicers -->
+<div id="debug-panel"></div>
+
 <div class="filter-section">
-  <div class="filter-group">
-    <label>Region</label>
-    <div class="pill-row" id="region-pills"></div>
-  </div>
+  <div class="filter-group"><label>Region</label><div class="pill-row" id="region-pills"></div></div>
   <div class="filter-divider"></div>
-  <div class="filter-group">
-    <label>Segment</label>
-    <div class="pill-row" id="segment-pills"></div>
-  </div>
+  <div class="filter-group"><label>Segment</label><div class="pill-row" id="segment-pills"></div></div>
   <div class="filter-divider"></div>
-  <div class="filter-group">
-    <label>Category</label>
-    <div class="pill-row" id="category-pills"></div>
-  </div>
+  <div class="filter-group"><label>Category</label><div class="pill-row" id="category-pills"></div></div>
   <div class="filter-divider"></div>
-  <div class="filter-group">
-    <label>Ship Mode</label>
-    <div class="pill-row" id="ship-pills"></div>
-  </div>
+  <div class="filter-group"><label>Ship Mode</label><div class="pill-row" id="ship-pills"></div></div>
   <div class="filter-divider"></div>
   <button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
 </div>
 
-<!-- Main content -->
 <div class="main">
-  <div id="demo-notice">
-    ℹ️ <strong>Demo mode:</strong> Running outside Tableau — showing sample Superstore data. Connect via Tableau Desktop to load your live workbook data.
-  </div>
+  <div id="notice-demo"   class="notice notice-demo"></div>
+  <div id="notice-live"   class="notice notice-live"></div>
+  <div id="notice-error"  class="notice notice-error"></div>
 
-  <!-- KPI Cards -->
   <div class="kpi-row">
-    <div class="kpi kpi-sales">
-      <div class="kpi-label">Total Sales</div>
-      <div class="kpi-val" id="kpi-sales">—</div>
-      <div class="kpi-sub" id="kpi-sales-sub"></div>
-      <div class="kpi-icon">💰</div>
-    </div>
-    <div class="kpi kpi-profit">
-      <div class="kpi-label">Total Profit</div>
-      <div class="kpi-val" id="kpi-profit">—</div>
-      <div class="kpi-sub" id="kpi-profit-sub"></div>
-      <div class="kpi-icon">📈</div>
-    </div>
-    <div class="kpi kpi-orders">
-      <div class="kpi-label">Total Orders</div>
-      <div class="kpi-val" id="kpi-orders">—</div>
-      <div class="kpi-sub" id="kpi-orders-sub"></div>
-      <div class="kpi-icon">📦</div>
-    </div>
-    <div class="kpi kpi-disc">
-      <div class="kpi-label">Avg Discount</div>
-      <div class="kpi-val" id="kpi-disc">—</div>
-      <div class="kpi-sub" id="kpi-disc-sub"></div>
-      <div class="kpi-icon">🏷️</div>
-    </div>
+    <div class="kpi kpi-sales">  <div class="kpi-label">Total Sales</div>  <div class="kpi-val" id="kpi-sales">—</div>  <div class="kpi-sub" id="kpi-sales-sub"></div>  <div class="kpi-icon">💰</div></div>
+    <div class="kpi kpi-profit"> <div class="kpi-label">Total Profit</div> <div class="kpi-val" id="kpi-profit">—</div> <div class="kpi-sub" id="kpi-profit-sub"></div> <div class="kpi-icon">📈</div></div>
+    <div class="kpi kpi-orders"> <div class="kpi-label">Total Quantity</div><div class="kpi-val" id="kpi-orders">—</div> <div class="kpi-sub" id="kpi-orders-sub"></div> <div class="kpi-icon">📦</div></div>
+    <div class="kpi kpi-disc">   <div class="kpi-label">Avg Discount</div> <div class="kpi-val" id="kpi-disc">—</div>   <div class="kpi-sub" id="kpi-disc-sub"></div>   <div class="kpi-icon">🏷️</div></div>
   </div>
 
-  <!-- Row 2: Bar + Scatter -->
   <div class="row2">
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Sales &amp; Profit by Sub-Category</div>
-        <span class="card-badge" id="subcat-count">0 items</span>
-      </div>
-      <div class="chart-wrap" id="subcat-wrap" style="height:280px">
-        <canvas id="subcat-chart" role="img" aria-label="Horizontal bar chart of sales and profit by sub-category">Sub-category sales and profit data.</canvas>
-      </div>
+      <div class="card-header"><div class="card-title">Sales &amp; Profit by Sub-Category</div><span class="card-badge" id="subcat-count">0 items</span></div>
+      <div class="chart-wrap" id="subcat-wrap" style="height:280px"><canvas id="subcat-chart" role="img" aria-label="Bar chart of sales and profit by sub-category">Sub-category data.</canvas></div>
     </div>
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Profit vs Sales (Scatter)</div>
-        <span class="card-badge">by Sub-Category</span>
-      </div>
-      <div class="chart-wrap" style="height:280px">
-        <canvas id="scatter-chart" role="img" aria-label="Scatter plot comparing profit to sales by sub-category">Profit versus sales scatter data.</canvas>
-      </div>
+      <div class="card-header"><div class="card-title">Profit vs Sales (Scatter)</div><span class="card-badge">by Sub-Category</span></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="scatter-chart" role="img" aria-label="Scatter plot of profit vs sales">Scatter data.</canvas></div>
     </div>
   </div>
 
-  <!-- Row 3: Donuts + Segment bars + Top table -->
   <div class="row3">
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Sales by Category</div>
-      </div>
-      <div class="chart-wrap" style="height:180px">
-        <canvas id="cat-chart" role="img" aria-label="Donut chart of sales split by category">Category distribution.</canvas>
-      </div>
+      <div class="card-header"><div class="card-title">Sales by Category</div></div>
+      <div class="chart-wrap" style="height:190px"><canvas id="cat-chart" role="img" aria-label="Donut chart by category">Category data.</canvas></div>
     </div>
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Sales by Region</div>
-      </div>
-      <div class="chart-wrap" style="height:180px">
-        <canvas id="region-chart" role="img" aria-label="Donut chart of sales split by region">Regional distribution.</canvas>
-      </div>
+      <div class="card-header"><div class="card-title">Sales by Region</div></div>
+      <div class="chart-wrap" style="height:190px"><canvas id="region-chart" role="img" aria-label="Donut chart by region">Region data.</canvas></div>
     </div>
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Profit by Segment</div>
-      </div>
+      <div class="card-header"><div class="card-title">Profit by Segment</div></div>
       <div id="seg-bars" style="padding-top:6px"></div>
     </div>
   </div>
 
-  <!-- Row 4: Top Sub-Categories table -->
   <div style="margin-top:12px">
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Top Sub-Categories Ranked</div>
-        <span class="card-badge" id="tbl-count"></span>
-      </div>
-      <table class="tbl" id="top-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Sub-Category</th>
-            <th>Category</th>
-            <th>Sales</th>
-            <th>Profit</th>
-            <th>Margin</th>
-            <th>Orders</th>
-            <th>Avg Discount</th>
-          </tr>
-        </thead>
+      <div class="card-header"><div class="card-title">Sub-Category Breakdown</div><span class="card-badge" id="tbl-count"></span></div>
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Sub-Category</th><th>Category</th><th>Sales</th><th>Profit</th><th>Margin</th><th>Qty</th><th>Avg Disc</th></tr></thead>
         <tbody id="top-tbody"></tbody>
       </table>
     </div>
@@ -360,383 +161,310 @@
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   FALLBACK DEMO DATA  (used when outside Tableau)
-═══════════════════════════════════════════════════ */
-const DEMO = [
-  {subcat:'Phones',      cat:'Technology',     region:'West',    segment:'Consumer',   ship:'Standard Class', sales:330007, profit:44516,  orders:889,  discount:0.14},
-  {subcat:'Chairs',      cat:'Furniture',      region:'East',    segment:'Corporate',  ship:'Second Class',   sales:328449, profit:26590,  orders:617,  discount:0.16},
-  {subcat:'Storage',     cat:'Office Supplies',region:'Central', segment:'Consumer',   ship:'Standard Class', sales:223844, profit:21279,  orders:846,  discount:0.11},
-  {subcat:'Tables',      cat:'Furniture',      region:'South',   segment:'Home Office',ship:'First Class',    sales:206966, profit:-64083, orders:319,  discount:0.30},
-  {subcat:'Binders',     cat:'Office Supplies',region:'East',    segment:'Consumer',   ship:'Standard Class', sales:203413, profit:30222,  orders:1523, discount:0.17},
-  {subcat:'Machines',    cat:'Technology',     region:'West',    segment:'Corporate',  ship:'Second Class',   sales:189239, profit:3385,   orders:115,  discount:0.19},
-  {subcat:'Accessories', cat:'Technology',     region:'Central', segment:'Consumer',   ship:'Standard Class', sales:167380, profit:41937,  orders:775,  discount:0.12},
-  {subcat:'Copiers',     cat:'Technology',     region:'East',    segment:'Corporate',  ship:'First Class',    sales:149528, profit:55618,  orders:68,   discount:0.04},
-  {subcat:'Bookcases',   cat:'Furniture',      region:'South',   segment:'Consumer',   ship:'Standard Class', sales:114880, profit:-3473,  orders:228,  discount:0.18},
-  {subcat:'Appliances',  cat:'Office Supplies',region:'West',    segment:'Home Office',ship:'Same Day',       sales:107532, profit:18138,  orders:466,  discount:0.14},
-  {subcat:'Furnishings', cat:'Furniture',      region:'Central', segment:'Consumer',   ship:'Standard Class', sales:91705,  profit:13059,  orders:957,  discount:0.15},
-  {subcat:'Paper',       cat:'Office Supplies',region:'East',    segment:'Corporate',  ship:'Second Class',   sales:78479,  profit:34054,  orders:1370, discount:0.09},
-  {subcat:'Supplies',    cat:'Office Supplies',region:'South',   segment:'Home Office',ship:'Standard Class', sales:46674,  profit:-1189,  orders:174,  discount:0.21},
-  {subcat:'Art',         cat:'Office Supplies',region:'West',    segment:'Consumer',   ship:'Standard Class', sales:27119,  profit:6527,   orders:796,  discount:0.10},
-  {subcat:'Envelopes',   cat:'Office Supplies',region:'Central', segment:'Corporate',  ship:'First Class',    sales:16476,  profit:6964,   orders:254,  discount:0.08},
-  {subcat:'Labels',      cat:'Office Supplies',region:'East',    segment:'Consumer',   ship:'Standard Class', sales:12486,  profit:5546,   orders:364,  discount:0.07},
-  {subcat:'Fasteners',   cat:'Office Supplies',region:'South',   segment:'Home Office',ship:'Second Class',   sales:3024,   profit:950,    orders:217,  discount:0.06},
-  {subcat:'Phones',      cat:'Technology',     region:'East',    segment:'Corporate',  ship:'First Class',    sales:142000, profit:19200,  orders:312,  discount:0.13},
-  {subcat:'Chairs',      cat:'Furniture',      region:'West',    segment:'Consumer',   ship:'Standard Class', sales:98000,  profit:8400,   orders:210,  discount:0.18},
-  {subcat:'Storage',     cat:'Office Supplies',region:'East',    segment:'Corporate',  ship:'Second Class',   sales:87000,  profit:9100,   orders:320,  discount:0.12},
-  {subcat:'Accessories', cat:'Technology',     region:'South',   segment:'Home Office',ship:'Same Day',       sales:62000,  profit:16200,  orders:298,  discount:0.11},
-  {subcat:'Binders',     cat:'Office Supplies',region:'West',    segment:'Home Office',ship:'Standard Class', sales:54000,  profit:9800,   orders:640,  discount:0.14},
-  {subcat:'Machines',    cat:'Technology',     region:'East',    segment:'Consumer',   ship:'First Class',    sales:76000,  profit:1200,   orders:48,   discount:0.22},
-  {subcat:'Copiers',     cat:'Technology',     region:'Central', segment:'Consumer',   ship:'Second Class',   sales:61000,  profit:22100,  orders:28,   discount:0.05},
-  {subcat:'Bookcases',   cat:'Furniture',      region:'East',    segment:'Corporate',  ship:'Standard Class', sales:44000,  profit:-1200,  orders:96,   discount:0.16},
-  {subcat:'Paper',       cat:'Office Supplies',region:'West',    segment:'Consumer',   ship:'Standard Class', sales:32000,  profit:13800,  orders:560,  discount:0.08}
+/* ══════════════════════════════════════
+   DEMO DATA
+══════════════════════════════════════ */
+const DEMO=[
+  {subcat:'Phones',cat:'Technology',region:'West',segment:'Consumer',ship:'Standard Class',sales:330007,profit:44516,qty:889,discount:0.14},
+  {subcat:'Chairs',cat:'Furniture',region:'East',segment:'Corporate',ship:'Second Class',sales:328449,profit:26590,qty:617,discount:0.16},
+  {subcat:'Storage',cat:'Office Supplies',region:'Central',segment:'Consumer',ship:'Standard Class',sales:223844,profit:21279,qty:846,discount:0.11},
+  {subcat:'Tables',cat:'Furniture',region:'South',segment:'Home Office',ship:'First Class',sales:206966,profit:-64083,qty:319,discount:0.30},
+  {subcat:'Binders',cat:'Office Supplies',region:'East',segment:'Consumer',ship:'Standard Class',sales:203413,profit:30222,qty:1523,discount:0.17},
+  {subcat:'Machines',cat:'Technology',region:'West',segment:'Corporate',ship:'Second Class',sales:189239,profit:3385,qty:115,discount:0.19},
+  {subcat:'Accessories',cat:'Technology',region:'Central',segment:'Consumer',ship:'Standard Class',sales:167380,profit:41937,qty:775,discount:0.12},
+  {subcat:'Copiers',cat:'Technology',region:'East',segment:'Corporate',ship:'First Class',sales:149528,profit:55618,qty:68,discount:0.04},
+  {subcat:'Bookcases',cat:'Furniture',region:'South',segment:'Consumer',ship:'Standard Class',sales:114880,profit:-3473,qty:228,discount:0.18},
+  {subcat:'Appliances',cat:'Office Supplies',region:'West',segment:'Home Office',ship:'Same Day',sales:107532,profit:18138,qty:466,discount:0.14},
+  {subcat:'Furnishings',cat:'Furniture',region:'Central',segment:'Consumer',ship:'Standard Class',sales:91705,profit:13059,qty:957,discount:0.15},
+  {subcat:'Paper',cat:'Office Supplies',region:'East',segment:'Corporate',ship:'Second Class',sales:78479,profit:34054,qty:1370,discount:0.09},
+  {subcat:'Supplies',cat:'Office Supplies',region:'South',segment:'Home Office',ship:'Standard Class',sales:46674,profit:-1189,qty:174,discount:0.21},
+  {subcat:'Art',cat:'Office Supplies',region:'West',segment:'Consumer',ship:'Standard Class',sales:27119,profit:6527,qty:796,discount:0.10},
+  {subcat:'Envelopes',cat:'Office Supplies',region:'Central',segment:'Corporate',ship:'First Class',sales:16476,profit:6964,qty:254,discount:0.08},
+  {subcat:'Labels',cat:'Office Supplies',region:'East',segment:'Consumer',ship:'Standard Class',sales:12486,profit:5546,qty:364,discount:0.07},
+  {subcat:'Fasteners',cat:'Office Supplies',region:'South',segment:'Home Office',ship:'Second Class',sales:3024,profit:950,qty:217,discount:0.06}
 ];
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════
    STATE
-═══════════════════════════════════════════════════ */
-let ALL_DATA = [];
-let UNIQUE = { region:[], segment:[], category:[], ship:[] };
-let SEL     = { region:new Set(), segment:new Set(), category:new Set(), ship:new Set() };
-let CHARTS  = {};
+══════════════════════════════════════ */
+let ALL_DATA=[], UNIQUE={region:[],segment:[],category:[],ship:[]};
+let SEL={region:new Set(),segment:new Set(),category:new Set(),ship:new Set()};
+let CHARTS={}, debugLog=[];
 
-const COLORS = {
-  blue:'#185FA5', teal:'#1D9E75', coral:'#D85A30',
-  amber:'#BA7517', purple:'#534AB7', pink:'#D4537E', gray:'#888780'
-};
-const CAT_COL  = {Technology:COLORS.blue, Furniture:COLORS.coral, 'Office Supplies':COLORS.teal};
-const REG_COL  = {West:COLORS.blue, East:COLORS.purple, Central:COLORS.amber, South:COLORS.teal};
-const PALETTE  = Object.values(COLORS);
+const C={blue:'#185FA5',teal:'#1D9E75',coral:'#D85A30',amber:'#BA7517',purple:'#534AB7',pink:'#D4537E',gray:'#888780'};
+const CAT_C={'Technology':C.blue,'Furniture':C.coral,'Office Supplies':C.teal};
+const REG_C={'West':C.blue,'East':C.purple,'Central':C.amber,'South':C.teal};
+const PAL=Object.values(C);
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════
+   DEBUG
+══════════════════════════════════════ */
+function log(...args){
+  const msg=args.map(a=>typeof a==='object'?JSON.stringify(a,null,2):String(a)).join(' ');
+  debugLog.push(msg);
+  const panel=document.getElementById('debug-panel');
+  panel.textContent=debugLog.join('\n');
+  panel.scrollTop=panel.scrollHeight;
+  console.log('[SuperstoreExt]',...args);
+}
+function toggleDebug(){
+  const p=document.getElementById('debug-panel');
+  p.classList.toggle('show');
+}
+
+/* ══════════════════════════════════════
    HELPERS
-═══════════════════════════════════════════════════ */
-function fmtM(v) {
-  const abs = Math.abs(v);
-  const sign = v < 0 ? '-' : '';
-  if (abs >= 1e6) return sign + '$' + (abs/1e6).toFixed(2) + 'M';
-  if (abs >= 1e3) return sign + '$' + (abs/1e3).toFixed(1) + 'K';
-  return sign + '$' + abs.toFixed(0);
-}
-function fmtPct(v)  { return (v*100).toFixed(1) + '%'; }
-function fmtNum(v)  { return Math.round(v).toLocaleString(); }
+══════════════════════════════════════ */
+function fmtM(v){const s=v<0?'-':'',a=Math.abs(v);return a>=1e6?s+'$'+(a/1e6).toFixed(2)+'M':a>=1e3?s+'$'+(a/1e3).toFixed(1)+'K':s+'$'+a.toFixed(0)}
+function fmtPct(v){return(v*100).toFixed(1)+'%'}
+function fmtNum(v){return Math.round(v).toLocaleString()}
 
-function mkChart(id, cfg) {
-  if (CHARTS[id]) { CHARTS[id].destroy(); }
-  CHARTS[id] = new Chart(document.getElementById(id), cfg);
+function mkChart(id,cfg){
+  if(CHARTS[id])CHARTS[id].destroy();
+  CHARTS[id]=new Chart(document.getElementById(id),cfg);
 }
 
-/* ═══════════════════════════════════════════════════
-   FILTERS / PILLS
-═══════════════════════════════════════════════════ */
-function buildPills(containerId, values, key) {
-  const c = document.getElementById(containerId);
-  c.innerHTML = '';
-  values.forEach(v => {
-    const p = document.createElement('span');
-    p.className = 'pill active';
-    p.textContent = v;
-    p.dataset.val = v;
-    p.onclick = () => togglePill(p, key, v);
+function showNotice(id,html){
+  ['notice-demo','notice-live','notice-error'].forEach(n=>{
+    const el=document.getElementById(n);
+    if(n===id){el.innerHTML=html;el.classList.add('show');}
+    else el.classList.remove('show');
+  });
+}
+
+/* ══════════════════════════════════════
+   COLUMN FINDER  — very permissive matching
+══════════════════════════════════════ */
+function findCol(cols, ...hints){
+  for(const hint of hints){
+    // exact match first (case-insensitive)
+    let i=cols.findIndex(c=>c.fieldName.toLowerCase()===hint.toLowerCase());
+    if(i>=0){log('  ✓ matched "'+cols[i].fieldName+'" for hint "'+hint+'"');return i;}
+    // contains match
+    i=cols.findIndex(c=>c.fieldName.toLowerCase().includes(hint.toLowerCase()));
+    if(i>=0){log('  ~ partial match "'+cols[i].fieldName+'" for hint "'+hint+'"');return i;}
+  }
+  log('  ✗ NO MATCH for hints: '+hints.join(', '));
+  return -1;
+}
+
+/* ══════════════════════════════════════
+   PILLS & FILTERS
+══════════════════════════════════════ */
+function buildPills(cid,vals,key){
+  const c=document.getElementById(cid);c.innerHTML='';
+  vals.forEach(v=>{
+    const p=document.createElement('span');
+    p.className='pill active';p.textContent=v;p.dataset.val=v;
+    p.onclick=()=>{
+      if(SEL[key].has(v)&&SEL[key].size>1){SEL[key].delete(v);p.classList.remove('active');}
+      else if(!SEL[key].has(v)){SEL[key].add(v);p.classList.add('active');}
+      renderDashboard();
+    };
     c.appendChild(p);
   });
 }
-
-function togglePill(el, key, val) {
-  if (SEL[key].has(val)) {
-    if (SEL[key].size <= 1) return;
-    SEL[key].delete(val);
-    el.classList.remove('active');
-  } else {
-    SEL[key].add(val);
-    el.classList.add('active');
-  }
+function resetFilters(){
+  Object.keys(SEL).forEach(k=>SEL[k]=new Set(UNIQUE[k]));
+  document.querySelectorAll('.pill').forEach(p=>p.classList.add('active'));
   renderDashboard();
 }
+function filtered(){return ALL_DATA.filter(d=>SEL.region.has(d.region)&&SEL.segment.has(d.segment)&&SEL.category.has(d.cat)&&SEL.ship.has(d.ship));}
 
-function resetFilters() {
-  Object.keys(SEL).forEach(k => { SEL[k] = new Set(UNIQUE[k]); });
-  document.querySelectorAll('.pill').forEach(p => p.classList.add('active'));
-  renderDashboard();
-}
+/* ══════════════════════════════════════
+   RENDER
+══════════════════════════════════════ */
+function renderDashboard(){
+  const d=filtered();
+  const totS=d.reduce((a,b)=>a+b.sales,0);
+  const totP=d.reduce((a,b)=>a+b.profit,0);
+  const totQ=d.reduce((a,b)=>a+b.qty,0);
+  const avgD=d.length?d.reduce((a,b)=>a+b.discount,0)/d.length:0;
+  const mg=totS?totP/totS:0;
 
-/* ═══════════════════════════════════════════════════
-   FILTERED DATA
-═══════════════════════════════════════════════════ */
-function filtered() {
-  return ALL_DATA.filter(d =>
-    SEL.region.has(d.region) &&
-    SEL.segment.has(d.segment) &&
-    SEL.category.has(d.cat) &&
-    SEL.ship.has(d.ship)
-  );
-}
+  document.getElementById('kpi-sales').textContent=fmtM(totS);
+  document.getElementById('kpi-profit').textContent=fmtM(totP);
+  document.getElementById('kpi-orders').textContent=fmtNum(totQ);
+  document.getElementById('kpi-disc').textContent=fmtPct(avgD);
+  document.getElementById('kpi-sales-sub').textContent=fmtNum(d.length)+' rows';
+  document.getElementById('kpi-profit-sub').textContent='Margin: '+(mg>=0?'+':'')+fmtPct(mg);
+  document.getElementById('kpi-profit-sub').style.color=mg>=0?C.teal:C.coral;
+  document.getElementById('kpi-orders-sub').textContent='Total units sold';
+  document.getElementById('kpi-disc-sub').textContent='Average across selection';
 
-/* ═══════════════════════════════════════════════════
-   RENDER DASHBOARD
-═══════════════════════════════════════════════════ */
-function renderDashboard() {
-  const d = filtered();
-
-  /* KPIs */
-  const totSales  = d.reduce((a,b) => a + b.sales, 0);
-  const totProfit = d.reduce((a,b) => a + b.profit, 0);
-  const totOrders = d.reduce((a,b) => a + b.orders, 0);
-  const avgDisc   = d.length ? d.reduce((a,b) => a + b.discount, 0) / d.length : 0;
-  const margin    = totSales ? totProfit / totSales : 0;
-
-  document.getElementById('kpi-sales').textContent    = fmtM(totSales);
-  document.getElementById('kpi-profit').textContent   = fmtM(totProfit);
-  document.getElementById('kpi-orders').textContent   = fmtNum(totOrders);
-  document.getElementById('kpi-disc').textContent     = fmtPct(avgDisc);
-  document.getElementById('kpi-sales-sub').textContent  = d.length + ' records matched';
-  document.getElementById('kpi-profit-sub').textContent = 'Margin: ' + (margin >= 0 ? '+' : '') + fmtPct(margin);
-  document.getElementById('kpi-profit-sub').style.color = margin >= 0 ? COLORS.teal : COLORS.coral;
-  document.getElementById('kpi-orders-sub').textContent = fmtNum(d.length) + ' data rows';
-  document.getElementById('kpi-disc-sub').textContent   = 'Average across selection';
-
-  /* Sub-category aggregation */
-  const scMap = {};
-  d.forEach(r => {
-    if (!scMap[r.subcat]) scMap[r.subcat] = { sales:0, profit:0, orders:0, discount:0, count:0, cat:r.cat };
-    scMap[r.subcat].sales    += r.sales;
-    scMap[r.subcat].profit   += r.profit;
-    scMap[r.subcat].orders   += r.orders;
-    scMap[r.subcat].discount += r.discount;
-    scMap[r.subcat].count++;
+  /* aggregate by sub-cat */
+  const scMap={};
+  d.forEach(r=>{
+    if(!scMap[r.subcat])scMap[r.subcat]={sales:0,profit:0,qty:0,discount:0,cnt:0,cat:r.cat};
+    scMap[r.subcat].sales+=r.sales;scMap[r.subcat].profit+=r.profit;
+    scMap[r.subcat].qty+=r.qty;scMap[r.subcat].discount+=r.discount;scMap[r.subcat].cnt++;
   });
-  const scSorted = Object.entries(scMap).sort((a,b) => b[1].sales - a[1].sales);
+  const sc=Object.entries(scMap).sort((a,b)=>b[1].sales-a[1].sales);
+  document.getElementById('subcat-count').textContent=sc.length+' items';
+  document.getElementById('tbl-count').textContent=sc.length+' sub-categories';
 
-  document.getElementById('subcat-count').textContent = scSorted.length + ' items';
-  document.getElementById('tbl-count').textContent    = scSorted.length + ' sub-categories';
+  /* bar */
+  const barH=Math.max(240,sc.length*28+70);
+  document.getElementById('subcat-wrap').style.height=barH+'px';
+  mkChart('subcat-chart',{type:'bar',data:{labels:sc.map(x=>x[0]),datasets:[
+    {label:'Sales',data:sc.map(x=>x[1].sales),backgroundColor:C.blue,borderRadius:3,barThickness:10},
+    {label:'Profit',data:sc.map(x=>x[1].profit),backgroundColor:sc.map(x=>x[1].profit>=0?C.teal:C.coral),borderRadius:3,barThickness:10}
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,position:'top',labels:{boxWidth:10,font:{size:11},padding:12}},
+      tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtM(ctx.parsed.x)}}},
+    scales:{x:{ticks:{callback:v=>fmtM(v),font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
+            y:{ticks:{font:{size:11}},grid:{display:false}}}}});
 
-  /* ── Horizontal bar: Sales + Profit ── */
-  const barH = Math.max(240, scSorted.length * 28 + 70);
-  document.getElementById('subcat-wrap').style.height = barH + 'px';
-  mkChart('subcat-chart', {
-    type: 'bar',
-    data: {
-      labels: scSorted.map(x => x[0]),
-      datasets: [
-        {
-          label: 'Sales',
-          data: scSorted.map(x => x[1].sales),
-          backgroundColor: COLORS.blue,
-          borderRadius: 3, barThickness: 10
-        },
-        {
-          label: 'Profit',
-          data: scSorted.map(x => x[1].profit),
-          backgroundColor: scSorted.map(x => x[1].profit >= 0 ? COLORS.teal : COLORS.coral),
-          borderRadius: 3, barThickness: 10
-        }
-      ]
-    },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true, position: 'top',
-          labels: { boxWidth: 10, font: { size: 11 }, padding: 12 }
-        },
-        tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmtM(ctx.parsed.x) } }
-      },
-      scales: {
-        x: { ticks: { callback: v => fmtM(v), font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.05)' } },
-        y: { ticks: { font: { size: 11 } }, grid: { display: false } }
-      }
-    }
-  });
+  /* scatter */
+  mkChart('scatter-chart',{type:'scatter',data:{datasets:sc.map(([k,v],i)=>({
+    label:k,data:[{x:v.sales,y:v.profit}],backgroundColor:PAL[i%PAL.length],pointRadius:8,pointHoverRadius:11
+  }))},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmtM(ctx.parsed.x)} sales · ${fmtM(ctx.parsed.y)} profit`}}},
+    scales:{x:{title:{display:true,text:'Sales',font:{size:11}},ticks:{callback:v=>fmtM(v),font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
+            y:{title:{display:true,text:'Profit',font:{size:11}},ticks:{callback:v=>fmtM(v),font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}});
 
-  /* ── Scatter: Profit vs Sales ── */
-  mkChart('scatter-chart', {
-    type: 'scatter',
-    data: {
-      datasets: scSorted.map(([k, v], i) => ({
-        label: k,
-        data: [{ x: v.sales, y: v.profit }],
-        backgroundColor: PALETTE[i % PALETTE.length],
-        pointRadius: 8, pointHoverRadius: 11
-      }))
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: {
-          label: ctx => `${ctx.dataset.label}: Sales ${fmtM(ctx.parsed.x)} · Profit ${fmtM(ctx.parsed.y)}`
-        }}
-      },
-      scales: {
-        x: { title: { display: true, text: 'Sales', font: { size: 11 } }, ticks: { callback: v => fmtM(v), font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.05)' } },
-        y: { title: { display: true, text: 'Profit', font: { size: 11 } }, ticks: { callback: v => fmtM(v), font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.05)' } }
-      }
-    }
-  });
+  /* cat donut */
+  const catMap={};d.forEach(r=>catMap[r.cat]=(catMap[r.cat]||0)+r.sales);
+  const ck=Object.keys(catMap);
+  mkChart('cat-chart',{type:'doughnut',data:{labels:ck,datasets:[{data:ck.map(k=>catMap[k]),backgroundColor:ck.map(k=>CAT_C[k]||C.gray),borderWidth:2,borderColor:'#F7F8FA',hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:9,padding:8}},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+fmtM(ctx.parsed)}}}}});
 
-  /* ── Category donut ── */
-  const catMap = {};
-  d.forEach(r => { catMap[r.cat] = (catMap[r.cat] || 0) + r.sales; });
-  const catKeys = Object.keys(catMap);
-  mkChart('cat-chart', {
-    type: 'doughnut',
-    data: {
-      labels: catKeys,
-      datasets: [{ data: catKeys.map(k => catMap[k]), backgroundColor: catKeys.map(k => CAT_COL[k] || COLORS.gray), borderWidth: 2, borderColor: '#F7F8FA', hoverOffset: 4 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '60%',
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 9, padding: 8 } },
-        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + fmtM(ctx.parsed) } }
-      }
-    }
-  });
+  /* region donut */
+  const regMap={};d.forEach(r=>regMap[r.region]=(regMap[r.region]||0)+r.sales);
+  const rk=Object.keys(regMap);
+  mkChart('region-chart',{type:'doughnut',data:{labels:rk,datasets:[{data:rk.map(k=>regMap[k]),backgroundColor:rk.map(k=>REG_C[k]||C.gray),borderWidth:2,borderColor:'#F7F8FA',hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:9,padding:8}},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+fmtM(ctx.parsed)}}}}});
 
-  /* ── Region donut ── */
-  const regMap = {};
-  d.forEach(r => { regMap[r.region] = (regMap[r.region] || 0) + r.sales; });
-  const regKeys = Object.keys(regMap);
-  mkChart('region-chart', {
-    type: 'doughnut',
-    data: {
-      labels: regKeys,
-      datasets: [{ data: regKeys.map(k => regMap[k]), backgroundColor: regKeys.map(k => REG_COL[k] || COLORS.gray), borderWidth: 2, borderColor: '#F7F8FA', hoverOffset: 4 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '60%',
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 9, padding: 8 } },
-        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + fmtM(ctx.parsed) } }
-      }
-    }
-  });
-
-  /* ── Segment profit bars ── */
-  const segMap = {};
-  d.forEach(r => { segMap[r.segment] = (segMap[r.segment] || 0) + r.profit; });
-  const segKeys = Object.keys(segMap);
-  const maxAbs = Math.max(...segKeys.map(s => Math.abs(segMap[s]))) || 1;
-  document.getElementById('seg-bars').innerHTML = segKeys.map(s => {
-    const p = segMap[s], pct = (Math.abs(p) / maxAbs * 100).toFixed(1);
-    const col = p >= 0 ? COLORS.teal : COLORS.coral;
-    return `<div class="seg-row">
-      <span class="seg-label">${s}</span>
-      <div class="seg-track"><div class="seg-fill" style="width:${pct}%;background:${col}"></div></div>
-      <span class="seg-val">${fmtM(p)}</span>
-    </div>`;
+  /* segment bars */
+  const segMap={};d.forEach(r=>segMap[r.segment]=(segMap[r.segment]||0)+r.profit);
+  const sk=Object.keys(segMap);const mx=Math.max(...sk.map(s=>Math.abs(segMap[s])))||1;
+  document.getElementById('seg-bars').innerHTML=sk.map(s=>{
+    const p=segMap[s],pct=(Math.abs(p)/mx*100).toFixed(1),col=p>=0?C.teal:C.coral;
+    return`<div class="seg-row"><span class="seg-label">${s}</span><div class="seg-track"><div class="seg-fill" style="width:${pct}%;background:${col}"></div></div><span class="seg-val">${fmtM(p)}</span></div>`;
   }).join('');
 
-  /* ── Top sub-categories table ── */
-  document.getElementById('top-tbody').innerHTML = scSorted.map(([name, v], i) => {
-    const mg = v.sales ? v.profit / v.sales : 0;
-    const avgD = v.count ? v.discount / v.count : 0;
-    const cls = v.profit >= 0 ? 'badge-pos' : 'badge-neg';
-    return `<tr>
+  /* table */
+  document.getElementById('top-tbody').innerHTML=sc.map(([name,v],i)=>{
+    const mg2=v.sales?v.profit/v.sales:0,avgD2=v.cnt?v.discount/v.cnt:0;
+    return`<tr>
       <td style="color:var(--muted);font-weight:600">${i+1}</td>
       <td style="font-weight:600">${name}</td>
-      <td><span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${CAT_COL[v.cat]}22;color:${CAT_COL[v.cat]};font-weight:600">${v.cat}</span></td>
+      <td><span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${CAT_C[v.cat]||C.gray}22;color:${CAT_C[v.cat]||C.gray};font-weight:600">${v.cat}</span></td>
       <td>${fmtM(v.sales)}</td>
-      <td><span class="badge ${cls}">${fmtM(v.profit)}</span></td>
-      <td style="color:${mg>=0?COLORS.teal:COLORS.coral};font-weight:600">${(mg>=0?'+':'') + fmtPct(mg)}</span></td>
-      <td>${fmtNum(v.orders)}</td>
-      <td>${fmtPct(v.count ? v.discount/v.count : 0)}</td>
+      <td><span class="badge ${v.profit>=0?'badge-pos':'badge-neg'}">${fmtM(v.profit)}</span></td>
+      <td style="color:${mg2>=0?C.teal:C.coral};font-weight:600">${(mg2>=0?'+':'')+fmtPct(mg2)}</td>
+      <td>${fmtNum(v.qty)}</td>
+      <td>${fmtPct(avgD2)}</td>
     </tr>`;
   }).join('');
 }
 
-/* ═══════════════════════════════════════════════════
-   TABLEAU EXTENSIONS API INTEGRATION
-═══════════════════════════════════════════════════ */
-
-/**
- * Maps a Tableau DataTable to our internal row format.
- * Column name matching is flexible — tries common Superstore field names.
- */
-function colIdx(cols, ...names) {
-  for (const n of names) {
-    const i = cols.findIndex(c => c.fieldName.toLowerCase().includes(n.toLowerCase()));
-    if (i >= 0) return i;
-  }
-  return -1;
-}
-
-async function loadFromTableau() {
-  try {
-    await tableau.extensions.initializeAsync();
-
-    const dash   = tableau.extensions.dashboardContent.dashboard;
-    const sheets = dash.worksheets;
-
-    document.getElementById('data-source-name').textContent = dash.name + ' · Live data';
-    document.getElementById('status-badge').textContent     = '✓ Connected';
-    document.getElementById('status-badge').classList.add('connected');
-
-    // Try to load data from the first worksheet
-    if (sheets.length === 0) throw new Error('No worksheets found');
-    const ws = sheets[0];
-    const dt = await ws.getSummaryDataAsync({ maxRows: 50000 });
-
-    const cols = dt.columns;
-    const rows = dt.data;
-
-    const iSubcat  = colIdx(cols, 'sub-category', 'sub_category', 'subcat');
-    const iCat     = colIdx(cols, 'category', 'cat');
-    const iRegion  = colIdx(cols, 'region');
-    const iSeg     = colIdx(cols, 'segment');
-    const iShip    = colIdx(cols, 'ship mode', 'ship_mode', 'shipmode');
-    const iSales   = colIdx(cols, 'sales');
-    const iProfit  = colIdx(cols, 'profit');
-    const iQty     = colIdx(cols, 'quantity', 'orders');
-    const iDisc    = colIdx(cols, 'discount');
-
-    ALL_DATA = rows.map(r => ({
-      subcat:   iSubcat  >= 0 ? r[iSubcat].value  : 'Unknown',
-      cat:      iCat     >= 0 ? r[iCat].value     : 'Unknown',
-      region:   iRegion  >= 0 ? r[iRegion].value  : 'Unknown',
-      segment:  iSeg     >= 0 ? r[iSeg].value     : 'Unknown',
-      ship:     iShip    >= 0 ? r[iShip].value    : 'Unknown',
-      sales:    iSales   >= 0 ? (r[iSales].value  || 0) : 0,
-      profit:   iProfit  >= 0 ? (r[iProfit].value || 0) : 0,
-      orders:   iQty     >= 0 ? (r[iQty].value    || 1) : 1,
-      discount: iDisc    >= 0 ? (r[iDisc].value   || 0) : 0
-    }));
-
-    initDashboard();
-
-  } catch (err) {
-    // Tableau not available — fall back to demo data
-    console.warn('Tableau Extensions API not available. Using demo data.', err);
-    document.getElementById('status-badge').textContent = '⚠ Demo mode';
-    document.getElementById('demo-notice').classList.add('show');
-    document.getElementById('data-source-name').textContent = 'Sample Superstore Data';
-    ALL_DATA = DEMO;
-    initDashboard();
-  } finally {
-    document.getElementById('loading').style.display = 'none';
-  }
-}
-
-function initDashboard() {
-  /* Build unique value lists from data */
-  UNIQUE.region   = [...new Set(ALL_DATA.map(d => d.region))].sort();
-  UNIQUE.segment  = [...new Set(ALL_DATA.map(d => d.segment))].sort();
-  UNIQUE.category = [...new Set(ALL_DATA.map(d => d.cat))].sort();
-  UNIQUE.ship     = [...new Set(ALL_DATA.map(d => d.ship))].sort();
-
-  /* Select all by default */
-  Object.keys(SEL).forEach(k => { SEL[k] = new Set(UNIQUE[k]); });
-
-  /* Build slicers */
-  buildPills('region-pills',   UNIQUE.region,   'region');
-  buildPills('segment-pills',  UNIQUE.segment,  'segment');
-  buildPills('category-pills', UNIQUE.category, 'category');
-  buildPills('ship-pills',     UNIQUE.ship,     'ship');
-
+/* ══════════════════════════════════════
+   INIT FROM DATA
+══════════════════════════════════════ */
+function initDashboard(){
+  UNIQUE.region  =[...new Set(ALL_DATA.map(d=>d.region))].filter(Boolean).sort();
+  UNIQUE.segment =[...new Set(ALL_DATA.map(d=>d.segment))].filter(Boolean).sort();
+  UNIQUE.category=[...new Set(ALL_DATA.map(d=>d.cat))].filter(Boolean).sort();
+  UNIQUE.ship    =[...new Set(ALL_DATA.map(d=>d.ship))].filter(Boolean).sort();
+  log('Unique values — region:'+UNIQUE.region+' | segment:'+UNIQUE.segment+' | category:'+UNIQUE.category+' | ship:'+UNIQUE.ship);
+  Object.keys(SEL).forEach(k=>SEL[k]=new Set(UNIQUE[k]));
+  buildPills('region-pills',  UNIQUE.region,  'region');
+  buildPills('segment-pills', UNIQUE.segment, 'segment');
+  buildPills('category-pills',UNIQUE.category,'category');
+  buildPills('ship-pills',    UNIQUE.ship,    'ship');
   renderDashboard();
 }
 
-/* ── Boot ── */
+/* ══════════════════════════════════════
+   TABLEAU EXTENSIONS API
+══════════════════════════════════════ */
+async function loadFromTableau(){
+  try{
+    log('Calling tableau.extensions.initializeAsync()…');
+    await tableau.extensions.initializeAsync();
+    log('✓ Initialized');
+
+    const dash=tableau.extensions.dashboardContent.dashboard;
+    log('Dashboard name: '+dash.name);
+    log('Worksheets found: '+dash.worksheets.length);
+    dash.worksheets.forEach((ws,i)=>log('  ['+i+'] '+ws.name));
+
+    document.getElementById('data-source-name').textContent=dash.name+' · Live';
+
+    /* try each worksheet until one gives us usable data */
+    let loaded=false;
+    for(let wi=0;wi<dash.worksheets.length;wi++){
+      const ws=dash.worksheets[wi];
+      log('Trying worksheet ['+wi+']: '+ws.name);
+      try{
+        const dt=await ws.getSummaryDataAsync({maxRows:100000});
+        log('Rows returned: '+dt.data.length);
+        log('Columns ('+dt.columns.length+'): '+dt.columns.map(c=>'"'+c.fieldName+'"').join(', '));
+
+        if(dt.data.length===0){log('  → empty, skipping');continue;}
+
+        const cols=dt.columns;
+        /* ── Find every needed column ── */
+        const iSubcat  = findCol(cols,'Sub-Category','SubCategory','sub-category','subcat','Sub Category');
+        const iCat     = findCol(cols,'Category','category');
+        const iRegion  = findCol(cols,'Region','region');
+        const iSeg     = findCol(cols,'Segment','segment');
+        const iShip    = findCol(cols,'Ship Mode','ShipMode','ship-mode','Ship_Mode');
+        const iSales   = findCol(cols,'Sales','sales');
+        const iProfit  = findCol(cols,'Profit','profit');
+        const iQty     = findCol(cols,'Quantity','Qty','quantity','qty');
+        const iDisc    = findCol(cols,'Discount','discount');
+
+        log('Column indices → subcat:'+iSubcat+' cat:'+iCat+' region:'+iRegion+' seg:'+iSeg+' ship:'+iShip+' sales:'+iSales+' profit:'+iProfit+' qty:'+iQty+' disc:'+iDisc);
+
+        /* require at least sales + one dimension */
+        if(iSales<0){log('  → Sales column not found, skipping');continue;}
+
+        ALL_DATA=dt.data.map(r=>{
+          function val(i){if(i<0)return null;const v=r[i];return v==null?null:(typeof v==='object'?v.value:v);}
+          function num(i){const v=val(i);return v==null||v===''||v==='Null'?0:parseFloat(v)||0;}
+          function str(i){const v=val(i);return v==null||v===''||v==='Null'?'Unknown':String(v);}
+          return{
+            subcat :str(iSubcat),
+            cat    :str(iCat),
+            region :str(iRegion),
+            segment:str(iSeg),
+            ship   :str(iShip),
+            sales  :num(iSales),
+            profit :num(iProfit),
+            qty    :num(iQty)||1,
+            discount:num(iDisc)
+          };
+        });
+
+        log('✓ Parsed '+ALL_DATA.length+' rows from "'+ws.name+'"');
+        log('Sample row 0: '+JSON.stringify(ALL_DATA[0]));
+
+        document.getElementById('status-badge').textContent='✓ Live: '+ws.name;
+        document.getElementById('status-badge').classList.add('connected');
+        showNotice('notice-live','✓ Live data connected from worksheet <strong>'+ws.name+'</strong> — '+fmtNum(ALL_DATA.length)+' rows loaded.');
+        loaded=true;
+        break;
+
+      }catch(wsErr){log('  → Error on worksheet '+ws.name+': '+wsErr.message);}
+    }
+
+    if(!loaded) throw new Error('No worksheet returned usable data');
+
+  }catch(err){
+    log('⚠ Tableau API failed: '+err.message);
+    log('Falling back to demo data');
+    document.getElementById('status-badge').textContent='⚠ Demo mode';
+    document.getElementById('data-source-name').textContent='Sample Superstore Data';
+    showNotice('notice-demo','⚠ <strong>Demo mode:</strong> Could not read live Tableau data ('+err.message+'). Showing built-in sample data. Click 🔍 Debug for details.');
+    ALL_DATA=DEMO;
+  }finally{
+    document.getElementById('loading').style.display='none';
+  }
+  initDashboard();
+}
+
 loadFromTableau();
 </script>
 </body>
