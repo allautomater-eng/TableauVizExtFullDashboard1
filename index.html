@@ -2,470 +2,753 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Superstore Analytics</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Superstore — Performance Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://extensions.tableausoftware.com/lib/tableau.extensions.1.latest.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root{--blue:#185FA5;--teal:#1D9E75;--coral:#D85A30;--amber:#BA7517;--purple:#534AB7;--pink:#D4537E;--bg:#F7F8FA;--surface:#FFFFFF;--border:rgba(0,0,0,0.08);--text:#1A1A2E;--muted:#6B7280;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.08)}
+/* ── RESET & BASE ── */
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;overflow-x:hidden}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.topbar-left{display:flex;align-items:center;gap:10px}
-.topbar-logo{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700}
-.topbar-title{font-size:14px;font-weight:600;color:var(--text)}
-.topbar-sub{font-size:11px;color:var(--muted);margin-top:1px}
-#status-badge{font-size:11px;padding:4px 10px;border-radius:20px;background:#FFF3CD;color:#856404;border:1px solid #FFECB5;transition:all .3s}
-#status-badge.connected{background:#D1FAE5;color:#065F46;border-color:#A7F3D0}
-.filter-section{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.filter-group{display:flex;align-items:center;gap:6px}
-.filter-group label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);white-space:nowrap}
-.pill-row{display:flex;flex-wrap:wrap;gap:4px}
-.pill{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none}
-.pill.active{background:var(--blue);border-color:var(--blue);color:#fff}
-.pill:hover:not(.active){border-color:var(--blue);color:var(--blue)}
-.filter-divider{width:1px;height:20px;background:var(--border)}
-.btn-reset{font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
-.btn-reset:hover{border-color:var(--blue);color:var(--blue)}
-.main{padding:14px 16px}
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
-.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
-.kpi-sales::before{background:var(--blue)}.kpi-profit::before{background:var(--teal)}.kpi-orders::before{background:var(--purple)}.kpi-disc::before{background:var(--amber)}
-.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
-.kpi-val{font-size:22px;font-weight:700;color:var(--text);line-height:1}
-.kpi-sub{font-size:11px;margin-top:5px;color:var(--muted)}
-.kpi-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:30px;opacity:.06}
-.row2{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:12px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
-.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.card-title{font-size:12px;font-weight:600;color:var(--text)}
-.card-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#EEF2FF;color:var(--purple)}
-.chart-wrap{position:relative;width:100%}
-.seg-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.seg-label{width:80px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0}
-.seg-track{flex:1;height:10px;background:#F1F3F5;border-radius:5px;overflow:hidden}
-.seg-fill{height:100%;border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1)}
-.seg-val{width:60px;font-size:11px;color:var(--text);font-weight:600}
-.tbl{width:100%;border-collapse:collapse}
-.tbl th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border);padding:4px 8px;text-align:left}
-.tbl td{font-size:11px;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text)}
-.tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:#F7F8FA}
-.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
-.badge-pos{background:#D1FAE5;color:#065F46}.badge-neg{background:#FEE2E2;color:#991B1B}
-#loading{position:fixed;inset:0;background:rgba(247,248,250,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px}
-.spinner{width:36px;height:36px;border:3px solid #E5E7EB;border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:13px;color:var(--muted)}
+:root{
+  --ink:    #0d0d0f;
+  --ink2:   #141418;
+  --ink3:   #1c1c22;
+  --ink4:   #252530;
+  --rim:    rgba(255,255,255,0.07);
+  --rim2:   rgba(255,255,255,0.12);
+  --gold:   #c9a84c;
+  --gold2:  #e8c96e;
+  --goldDim:#7a6128;
+  --snow:   #f4f1ec;
+  --muted:  #7a7a8a;
+  --muted2: #555560;
+  --teal:   #2ec4b6;
+  --rose:   #e05c6a;
+  --r: 6px;
+}
+html,body{height:100%;background:var(--ink);color:var(--snow);font-family:'DM Sans',sans-serif;font-size:13px;overflow-x:hidden}
 
-/* ── DEBUG PANEL ── */
-#debug-panel{display:none;background:#1e1e2e;color:#cdd6f4;font-family:monospace;font-size:11px;padding:12px 16px;margin:10px 16px;border-radius:8px;border:1px solid #45475a;white-space:pre-wrap;max-height:200px;overflow-y:auto}
-#debug-panel.show{display:block}
-#debug-toggle{font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;margin-left:8px}
-#debug-toggle:hover{border-color:#534AB7;color:#534AB7}
+/* ── LOADING ── */
+#boot{position:fixed;inset:0;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:20px;transition:opacity .6s}
+#boot.gone{opacity:0;pointer-events:none}
+.boot-logo{font-family:'Playfair Display',serif;font-size:28px;color:var(--gold);letter-spacing:2px}
+.boot-bar{width:180px;height:2px;background:var(--ink4);border-radius:2px;overflow:hidden}
+.boot-bar-fill{height:100%;width:0;background:var(--gold);border-radius:2px;animation:bootFill 1.8s ease forwards}
+@keyframes bootFill{to{width:100%}}
+.boot-sub{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
 
-/* ── NOTICE BANNER ── */
-.notice{border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;display:none}
-.notice.show{display:block}
-.notice-demo{background:#FFF8E1;border:1px solid #FFE082;color:#795548}
-.notice-live{background:#D1FAE5;border:1px solid #A7F3D0;color:#065F46}
-.notice-error{background:#FEE2E2;border:1px solid #FECACA;color:#991B1B}
+/* ── SHELL ── */
+.shell{min-height:100vh;display:flex;flex-direction:column;opacity:0;animation:fadeUp .7s .5s ease forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
-@media(max-width:720px){.kpi-row{grid-template-columns:repeat(2,1fr)}.row2,.row3{grid-template-columns:1fr}.filter-section{gap:8px}}
+/* ── TOPBAR ── */
+.topbar{
+  padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--rim);
+  background:var(--ink2);
+  position:sticky;top:0;z-index:50;
+}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand-name{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);letter-spacing:.5px}
+.brand-tag{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;border-left:1px solid var(--rim2);padding-left:10px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+#conn-pill{font-size:10px;padding:4px 12px;border-radius:20px;background:var(--ink4);border:1px solid var(--goldDim);color:var(--muted);letter-spacing:.5px;text-transform:uppercase;transition:all .4s}
+#conn-pill.live{background:rgba(46,196,182,.12);border-color:var(--teal);color:var(--teal)}
+#conn-pill.demo{background:rgba(201,168,76,.1);border-color:var(--goldDim);color:var(--gold)}
+.btn-debug{font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--rim2);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:all .2s}
+.btn-debug:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── DATE SLICER PANEL ── */
+.slicer-panel{
+  background:var(--ink2);
+  border-bottom:1px solid var(--rim);
+  padding:12px 24px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:16px;
+}
+.slicer-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--goldDim);font-weight:500;white-space:nowrap}
+.date-range-row{display:flex;align-items:center;gap:8px}
+.date-input-wrap{display:flex;align-items:center;gap:6px;background:var(--ink3);border:1px solid var(--rim2);border-radius:var(--r);padding:5px 10px;transition:border .2s}
+.date-input-wrap:focus-within{border-color:var(--gold)}
+.date-input-wrap span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.date-input-wrap input[type=date]{background:transparent;border:none;color:var(--snow);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;width:120px;color-scheme:dark}
+.slicer-sep{font-size:11px;color:var(--muted2)}
+
+/* Quick-pick chips */
+.qpick-row{display:flex;flex-wrap:wrap;gap:5px}
+.qchip{font-size:10px;padding:4px 11px;border-radius:20px;border:1px solid var(--rim2);color:var(--muted);background:transparent;cursor:pointer;transition:all .15s;letter-spacing:.3px;text-transform:uppercase}
+.qchip:hover{border-color:var(--gold2);color:var(--gold2)}
+.qchip.active{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:500}
+
+.slicer-divider{width:1px;height:24px;background:var(--rim);align-self:center}
+.btn-reset-slicer{font-size:10px;padding:4px 12px;border-radius:4px;border:1px solid var(--rim2);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;white-space:nowrap}
+.btn-reset-slicer:hover{border-color:var(--rose);color:var(--rose)}
+
+/* ── MAIN CANVAS ── */
+.main{padding:20px 24px;flex:1;display:flex;flex-direction:column;gap:16px}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{
+  background:var(--ink2);
+  border:1px solid var(--rim);
+  border-radius:10px;
+  padding:18px 20px 14px;
+  position:relative;overflow:hidden;
+  transition:transform .2s,border-color .2s;
+  cursor:default;
+}
+.kpi:hover{transform:translateY(-2px);border-color:var(--rim2)}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.kpi-sales::after  {background:var(--gold)}
+.kpi-profit::after {background:var(--teal)}
+.kpi-qty::after    {background:#7b68ee}
+.kpi-disc::after   {background:var(--rose)}
+
+.kpi-eyebrow{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.kpi-dot{width:5px;height:5px;border-radius:50%}
+.kpi-val{font-family:'Playfair Display',serif;font-size:28px;color:var(--snow);line-height:1;margin-bottom:8px}
+.kpi-meta{font-size:10px;color:var(--muted)}
+.kpi-delta{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:10px;margin-right:6px;font-weight:500}
+.kpi-delta.pos{background:rgba(46,196,182,.12);color:var(--teal)}
+.kpi-delta.neg{background:rgba(224,92,106,.12);color:var(--rose)}
+.kpi-spark{position:absolute;bottom:16px;right:14px;width:64px;height:28px;opacity:.6}
+
+/* ── ROW 2: big chart + donut ── */
+.row-mid{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}
+
+/* ── ROW 3: two smaller charts ── */
+.row-bot{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── CARDS ── */
+.card{
+  background:var(--ink2);
+  border:1px solid var(--rim);
+  border-radius:10px;
+  padding:18px 20px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.card-head{display:flex;align-items:baseline;justify-content:space-between}
+.card-title{font-family:'Playfair Display',serif;font-size:14px;color:var(--snow);letter-spacing:.2px}
+.card-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.chart-box{position:relative;width:100%}
+
+/* ── PROFIT BAR LIST ── */
+.bar-list{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-name{width:80px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:6px;background:var(--ink4);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.bar-val{width:56px;font-size:10px;color:var(--snow);font-weight:500;text-align:right}
+
+/* ── DATE RANGE DISPLAY ── */
+#date-range-display{font-size:10px;color:var(--goldDim);text-align:right;padding:0 24px 6px;font-style:italic}
+
+/* ── NOTICE ── */
+#notice{display:none;margin:0 24px;padding:8px 14px;border-radius:6px;font-size:11px;border:1px solid}
+#notice.show{display:block}
+#notice.demo{background:rgba(201,168,76,.08);border-color:var(--goldDim);color:var(--gold)}
+#notice.live{background:rgba(46,196,182,.08);border-color:rgba(46,196,182,.3);color:var(--teal)}
+#notice.err {background:rgba(224,92,106,.08);border-color:rgba(224,92,106,.3);color:var(--rose)}
+
+/* ── DEBUG ── */
+#dbg{display:none;margin:8px 24px;background:#0a0a10;border:1px solid var(--rim2);border-radius:6px;padding:12px;font-family:monospace;font-size:10px;color:#7ade8c;max-height:180px;overflow-y:auto;white-space:pre-wrap}
+#dbg.show{display:block}
+
+/* ── NO DATA ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:120px;color:var(--muted);gap:8px}
+.empty-icon{font-size:28px;opacity:.3}
+.empty-txt{font-size:11px;text-transform:uppercase;letter-spacing:1px}
 </style>
 </head>
 <body>
 
-<div id="loading">
-  <div class="spinner"></div>
-  <div class="loading-text" id="loading-text">Connecting to Tableau…</div>
+<!-- Boot splash -->
+<div id="boot">
+  <div class="boot-logo">SUPERSTORE</div>
+  <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+  <div class="boot-sub">Performance Studio</div>
 </div>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="topbar-logo">S</div>
-    <div>
-      <div class="topbar-title">Superstore Analytics</div>
-      <div class="topbar-sub" id="data-source-name">Tableau Viz Extension</div>
+<!-- Main shell -->
+<div class="shell" id="shell">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-name">Superstore</span>
+      <span class="brand-tag">Performance Studio</span>
     </div>
-  </div>
-  <div style="display:flex;align-items:center;gap:6px">
-    <span id="status-badge">⏳ Connecting…</span>
-    <button id="debug-toggle" onclick="toggleDebug()">🔍 Debug</button>
-  </div>
-</div>
-
-<div id="debug-panel"></div>
-
-<div class="filter-section">
-  <div class="filter-group"><label>Region</label><div class="pill-row" id="region-pills"></div></div>
-  <div class="filter-divider"></div>
-  <div class="filter-group"><label>Segment</label><div class="pill-row" id="segment-pills"></div></div>
-  <div class="filter-divider"></div>
-  <div class="filter-group"><label>Category</label><div class="pill-row" id="category-pills"></div></div>
-  <div class="filter-divider"></div>
-  <div class="filter-group"><label>Ship Mode</label><div class="pill-row" id="ship-pills"></div></div>
-  <div class="filter-divider"></div>
-  <button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
-</div>
-
-<div class="main">
-  <div id="notice-demo"   class="notice notice-demo"></div>
-  <div id="notice-live"   class="notice notice-live"></div>
-  <div id="notice-error"  class="notice notice-error"></div>
-
-  <div class="kpi-row">
-    <div class="kpi kpi-sales">  <div class="kpi-label">Total Sales</div>  <div class="kpi-val" id="kpi-sales">—</div>  <div class="kpi-sub" id="kpi-sales-sub"></div>  <div class="kpi-icon">💰</div></div>
-    <div class="kpi kpi-profit"> <div class="kpi-label">Total Profit</div> <div class="kpi-val" id="kpi-profit">—</div> <div class="kpi-sub" id="kpi-profit-sub"></div> <div class="kpi-icon">📈</div></div>
-    <div class="kpi kpi-orders"> <div class="kpi-label">Total Quantity</div><div class="kpi-val" id="kpi-orders">—</div> <div class="kpi-sub" id="kpi-orders-sub"></div> <div class="kpi-icon">📦</div></div>
-    <div class="kpi kpi-disc">   <div class="kpi-label">Avg Discount</div> <div class="kpi-val" id="kpi-disc">—</div>   <div class="kpi-sub" id="kpi-disc-sub"></div>   <div class="kpi-icon">🏷️</div></div>
-  </div>
-
-  <div class="row2">
-    <div class="card">
-      <div class="card-header"><div class="card-title">Sales &amp; Profit by Sub-Category</div><span class="card-badge" id="subcat-count">0 items</span></div>
-      <div class="chart-wrap" id="subcat-wrap" style="height:280px"><canvas id="subcat-chart" role="img" aria-label="Bar chart of sales and profit by sub-category">Sub-category data.</canvas></div>
+    <div class="topbar-right">
+      <span id="conn-pill">● Connecting</span>
+      <button class="btn-debug" onclick="toggleDbg()">Debug</button>
     </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Profit vs Sales (Scatter)</div><span class="card-badge">by Sub-Category</span></div>
-      <div class="chart-wrap" style="height:280px"><canvas id="scatter-chart" role="img" aria-label="Scatter plot of profit vs sales">Scatter data.</canvas></div>
+  </header>
+
+  <!-- Debug -->
+  <div id="dbg"></div>
+
+  <!-- Date slicer panel -->
+  <div class="slicer-panel">
+    <span class="slicer-label">Date Range</span>
+    <div class="date-range-row">
+      <div class="date-input-wrap">
+        <span>From</span>
+        <input type="date" id="dt-from" onchange="onDateChange()"/>
+      </div>
+      <span class="slicer-sep">—</span>
+      <div class="date-input-wrap">
+        <span>To</span>
+        <input type="date" id="dt-to" onchange="onDateChange()"/>
+      </div>
     </div>
+    <div class="slicer-divider"></div>
+    <span class="slicer-label">Quick Pick</span>
+    <div class="qpick-row" id="qpick-row"></div>
+    <div class="slicer-divider"></div>
+    <button class="btn-reset-slicer" onclick="resetDate()">✕ Reset</button>
   </div>
 
-  <div class="row3">
-    <div class="card">
-      <div class="card-header"><div class="card-title">Sales by Category</div></div>
-      <div class="chart-wrap" style="height:190px"><canvas id="cat-chart" role="img" aria-label="Donut chart by category">Category data.</canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Sales by Region</div></div>
-      <div class="chart-wrap" style="height:190px"><canvas id="region-chart" role="img" aria-label="Donut chart by region">Region data.</canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Profit by Segment</div></div>
-      <div id="seg-bars" style="padding-top:6px"></div>
-    </div>
-  </div>
+  <!-- Notice -->
+  <div id="notice"></div>
 
-  <div style="margin-top:12px">
-    <div class="card">
-      <div class="card-header"><div class="card-title">Sub-Category Breakdown</div><span class="card-badge" id="tbl-count"></span></div>
-      <table class="tbl">
-        <thead><tr><th>#</th><th>Sub-Category</th><th>Category</th><th>Sales</th><th>Profit</th><th>Margin</th><th>Qty</th><th>Avg Disc</th></tr></thead>
-        <tbody id="top-tbody"></tbody>
-      </table>
+  <!-- Date range display -->
+  <div id="date-range-display"></div>
+
+  <!-- Main content -->
+  <div class="main" id="main-content">
+
+    <!-- KPI strip -->
+    <div class="kpi-strip">
+      <div class="kpi kpi-sales">
+        <div class="kpi-eyebrow"><span class="kpi-dot" style="background:var(--gold)"></span>Total Sales</div>
+        <div class="kpi-val" id="kv-sales">—</div>
+        <div class="kpi-meta"><span class="kpi-delta pos" id="kd-sales"></span><span id="km-sales"></span></div>
+        <canvas class="kpi-spark" id="sp-sales" role="img" aria-label="Sales sparkline"></canvas>
+      </div>
+      <div class="kpi kpi-profit">
+        <div class="kpi-eyebrow"><span class="kpi-dot" style="background:var(--teal)"></span>Total Profit</div>
+        <div class="kpi-val" id="kv-profit">—</div>
+        <div class="kpi-meta"><span class="kpi-delta" id="kd-profit"></span><span id="km-profit"></span></div>
+        <canvas class="kpi-spark" id="sp-profit" role="img" aria-label="Profit sparkline"></canvas>
+      </div>
+      <div class="kpi kpi-qty">
+        <div class="kpi-eyebrow"><span class="kpi-dot" style="background:#7b68ee"></span>Quantity Sold</div>
+        <div class="kpi-val" id="kv-qty">—</div>
+        <div class="kpi-meta"><span class="kpi-delta pos" id="kd-qty"></span><span id="km-qty"></span></div>
+        <canvas class="kpi-spark" id="sp-qty" role="img" aria-label="Quantity sparkline"></canvas>
+      </div>
+      <div class="kpi kpi-disc">
+        <div class="kpi-eyebrow"><span class="kpi-dot" style="background:var(--rose)"></span>Avg Discount</div>
+        <div class="kpi-val" id="kv-disc">—</div>
+        <div class="kpi-meta"><span class="kpi-delta" id="kd-disc"></span><span id="km-disc"></span></div>
+        <canvas class="kpi-spark" id="sp-disc" role="img" aria-label="Discount sparkline"></canvas>
+      </div>
     </div>
-  </div>
-</div>
+
+    <!-- Mid row -->
+    <div class="row-mid">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Sales over Time</span>
+          <span class="card-sub" id="trend-sub">monthly</span>
+        </div>
+        <div class="chart-box" style="height:220px">
+          <canvas id="trend-chart" role="img" aria-label="Sales trend over time">Sales trend.</canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Sales by Category</span>
+          <span class="card-sub">distribution</span>
+        </div>
+        <div class="chart-box" style="height:220px">
+          <canvas id="cat-chart" role="img" aria-label="Donut chart by category">Category distribution.</canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom row -->
+    <div class="row-bot">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Profit by Sub-Category</span>
+          <span class="card-sub">ranked</span>
+        </div>
+        <div id="subcat-bars" class="bar-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Sales by Region</span>
+          <span class="card-sub">horizontal bars</span>
+        </div>
+        <div class="chart-box" style="height:200px">
+          <canvas id="region-chart" role="img" aria-label="Bar chart of sales by region">Region data.</canvas>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /shell -->
 
 <script>
-/* ══════════════════════════════════════
-   DEMO DATA
-══════════════════════════════════════ */
-const DEMO=[
-  {subcat:'Phones',cat:'Technology',region:'West',segment:'Consumer',ship:'Standard Class',sales:330007,profit:44516,qty:889,discount:0.14},
-  {subcat:'Chairs',cat:'Furniture',region:'East',segment:'Corporate',ship:'Second Class',sales:328449,profit:26590,qty:617,discount:0.16},
-  {subcat:'Storage',cat:'Office Supplies',region:'Central',segment:'Consumer',ship:'Standard Class',sales:223844,profit:21279,qty:846,discount:0.11},
-  {subcat:'Tables',cat:'Furniture',region:'South',segment:'Home Office',ship:'First Class',sales:206966,profit:-64083,qty:319,discount:0.30},
-  {subcat:'Binders',cat:'Office Supplies',region:'East',segment:'Consumer',ship:'Standard Class',sales:203413,profit:30222,qty:1523,discount:0.17},
-  {subcat:'Machines',cat:'Technology',region:'West',segment:'Corporate',ship:'Second Class',sales:189239,profit:3385,qty:115,discount:0.19},
-  {subcat:'Accessories',cat:'Technology',region:'Central',segment:'Consumer',ship:'Standard Class',sales:167380,profit:41937,qty:775,discount:0.12},
-  {subcat:'Copiers',cat:'Technology',region:'East',segment:'Corporate',ship:'First Class',sales:149528,profit:55618,qty:68,discount:0.04},
-  {subcat:'Bookcases',cat:'Furniture',region:'South',segment:'Consumer',ship:'Standard Class',sales:114880,profit:-3473,qty:228,discount:0.18},
-  {subcat:'Appliances',cat:'Office Supplies',region:'West',segment:'Home Office',ship:'Same Day',sales:107532,profit:18138,qty:466,discount:0.14},
-  {subcat:'Furnishings',cat:'Furniture',region:'Central',segment:'Consumer',ship:'Standard Class',sales:91705,profit:13059,qty:957,discount:0.15},
-  {subcat:'Paper',cat:'Office Supplies',region:'East',segment:'Corporate',ship:'Second Class',sales:78479,profit:34054,qty:1370,discount:0.09},
-  {subcat:'Supplies',cat:'Office Supplies',region:'South',segment:'Home Office',ship:'Standard Class',sales:46674,profit:-1189,qty:174,discount:0.21},
-  {subcat:'Art',cat:'Office Supplies',region:'West',segment:'Consumer',ship:'Standard Class',sales:27119,profit:6527,qty:796,discount:0.10},
-  {subcat:'Envelopes',cat:'Office Supplies',region:'Central',segment:'Corporate',ship:'First Class',sales:16476,profit:6964,qty:254,discount:0.08},
-  {subcat:'Labels',cat:'Office Supplies',region:'East',segment:'Consumer',ship:'Standard Class',sales:12486,profit:5546,qty:364,discount:0.07},
-  {subcat:'Fasteners',cat:'Office Supplies',region:'South',segment:'Home Office',ship:'Second Class',sales:3024,profit:950,qty:217,discount:0.06}
-];
+/* ══════════════════════════════════════════════
+   DEMO DATA  — row-level with order dates
+══════════════════════════════════════════════ */
+const DEMO_ROWS = (function(){
+  const subcats = [
+    {s:'Phones',     c:'Technology',     r:'West',    seg:'Consumer',   ship:'Standard Class', sp:330, pr:44,  q:3},
+    {s:'Chairs',     c:'Furniture',      r:'East',    seg:'Corporate',  ship:'Second Class',   sp:328, pr:26,  q:4},
+    {s:'Storage',    c:'Office Supplies',r:'Central', seg:'Consumer',   ship:'Standard Class', sp:224, pr:21,  q:3},
+    {s:'Tables',     c:'Furniture',      r:'South',   seg:'Home Office',ship:'First Class',    sp:207, pr:-64, q:2},
+    {s:'Binders',    c:'Office Supplies',r:'East',    seg:'Consumer',   ship:'Standard Class', sp:203, pr:30,  q:5},
+    {s:'Machines',   c:'Technology',     r:'West',    seg:'Corporate',  ship:'Second Class',   sp:189, pr:3,   q:1},
+    {s:'Accessories',c:'Technology',     r:'Central', seg:'Consumer',   ship:'Standard Class', sp:167, pr:42,  q:4},
+    {s:'Copiers',    c:'Technology',     r:'East',    seg:'Corporate',  ship:'First Class',    sp:149, pr:56,  q:1},
+    {s:'Bookcases',  c:'Furniture',      r:'South',   seg:'Consumer',   ship:'Standard Class', sp:115, pr:-3,  q:2},
+    {s:'Appliances', c:'Office Supplies',r:'West',    seg:'Home Office',ship:'Same Day',       sp:108, pr:18,  q:3},
+    {s:'Furnishings',c:'Furniture',      r:'Central', seg:'Consumer',   ship:'Standard Class', sp:92,  pr:13,  q:5},
+    {s:'Paper',      c:'Office Supplies',r:'East',    seg:'Corporate',  ship:'Second Class',   sp:78,  pr:34,  q:6},
+  ];
+  const rows=[];
+  const now=new Date();
+  // generate ~600 synthetic rows across 2021-2024
+  for(let y=2021;y<=2024;y++){
+    for(let m=0;m<12;m++){
+      subcats.forEach(sc=>{
+        const cnt=Math.floor(Math.random()*4)+2;
+        for(let i=0;i<cnt;i++){
+          const d=new Date(y,m,Math.floor(Math.random()*28)+1);
+          const noise=(Math.random()-.3)*0.4;
+          rows.push({
+            date:d,
+            year:y, month:m,
+            subcat:sc.s, cat:sc.c, region:sc.r,
+            segment:sc.seg, ship:sc.ship,
+            sales  : Math.max(10, sc.sp * 1000 * (1+noise) / 12 / 5),
+            profit : sc.pr * 1000 * (1+noise) / 12 / 5,
+            qty    : Math.max(1, Math.round(sc.q * (1+noise*0.5))),
+            discount: +(Math.random()*0.25).toFixed(2)
+          });
+        }
+      });
+    }
+  }
+  return rows;
+})();
 
-/* ══════════════════════════════════════
+/* ══════════════════════════════════════════════
    STATE
-══════════════════════════════════════ */
-let ALL_DATA=[], UNIQUE={region:[],segment:[],category:[],ship:[]};
-let SEL={region:new Set(),segment:new Set(),category:new Set(),ship:new Set()};
-let CHARTS={}, debugLog=[];
+══════════════════════════════════════════════ */
+let ALL = [];
+let dtFrom = null, dtTo = null;
+let activeQchip = null;
+let CHARTS = {};
+let dbgLines = [];
 
-const C={blue:'#185FA5',teal:'#1D9E75',coral:'#D85A30',amber:'#BA7517',purple:'#534AB7',pink:'#D4537E',gray:'#888780'};
-const CAT_C={'Technology':C.blue,'Furniture':C.coral,'Office Supplies':C.teal};
-const REG_C={'West':C.blue,'East':C.purple,'Central':C.amber,'South':C.teal};
-const PAL=Object.values(C);
+const C = {
+  gold:'#c9a84c', gold2:'#e8c96e',
+  teal:'#2ec4b6', rose:'#e05c6a',
+  purple:'#7b68ee', blue:'#4a9eff',
+  muted:'#7a7a8a'
+};
 
-/* ══════════════════════════════════════
+/* ══════════════════════════════════════════════
    DEBUG
-══════════════════════════════════════ */
-function log(...args){
-  const msg=args.map(a=>typeof a==='object'?JSON.stringify(a,null,2):String(a)).join(' ');
-  debugLog.push(msg);
-  const panel=document.getElementById('debug-panel');
-  panel.textContent=debugLog.join('\n');
-  panel.scrollTop=panel.scrollHeight;
-  console.log('[SuperstoreExt]',...args);
+══════════════════════════════════════════════ */
+function log(...a){
+  const msg=a.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' ');
+  dbgLines.push(msg); console.log('[Ext]',...a);
+  const el=document.getElementById('dbg');
+  el.textContent=dbgLines.join('\n');
+  el.scrollTop=el.scrollHeight;
 }
-function toggleDebug(){
-  const p=document.getElementById('debug-panel');
-  p.classList.toggle('show');
+function toggleDbg(){ document.getElementById('dbg').classList.toggle('show'); }
+
+/* ══════════════════════════════════════════════
+   FORMAT
+══════════════════════════════════════════════ */
+function fmtM(v){
+  const s=v<0?'-':'', a=Math.abs(v);
+  return a>=1e6?s+'$'+(a/1e6).toFixed(2)+'M'
+       : a>=1e3?s+'$'+(a/1e3).toFixed(1)+'K'
+       : s+'$'+a.toFixed(0);
+}
+function fmtN(v){ return Math.round(Math.abs(v)).toLocaleString(); }
+function fmtPct(v){ return (v*100).toFixed(1)+'%'; }
+function dateStr(d){ return d.toISOString().slice(0,10); }
+function parseLocalDate(s){
+  if(!s)return null;
+  const [y,m,d]=s.split('-').map(Number);
+  return new Date(y,m-1,d);
 }
 
-/* ══════════════════════════════════════
-   HELPERS
-══════════════════════════════════════ */
-function fmtM(v){const s=v<0?'-':'',a=Math.abs(v);return a>=1e6?s+'$'+(a/1e6).toFixed(2)+'M':a>=1e3?s+'$'+(a/1e3).toFixed(1)+'K':s+'$'+a.toFixed(0)}
-function fmtPct(v){return(v*100).toFixed(1)+'%'}
-function fmtNum(v){return Math.round(v).toLocaleString()}
+/* ══════════════════════════════════════════════
+   DATE SLICER SETUP
+══════════════════════════════════════════════ */
+function buildQuickPicks(){
+  const now = new Date();
+  const y   = now.getFullYear();
+  const picks = [
+    {label:'YTD',  from:new Date(y,0,1),  to:now},
+    {label:String(y),   from:new Date(y,0,1),  to:new Date(y,11,31)},
+    {label:String(y-1), from:new Date(y-1,0,1),to:new Date(y-1,11,31)},
+    {label:'Q1 '+y, from:new Date(y,0,1),  to:new Date(y,2,31)},
+    {label:'Q2 '+y, from:new Date(y,3,1),  to:new Date(y,5,30)},
+    {label:'Q3 '+y, from:new Date(y,6,1),  to:new Date(y,8,30)},
+    {label:'Q4 '+y, from:new Date(y,9,1),  to:new Date(y,11,31)},
+    {label:'Last 90d', from:new Date(now-90*864e5), to:now},
+    {label:'All',   from:null, to:null},
+  ];
+  const row = document.getElementById('qpick-row');
+  picks.forEach(p=>{
+    const btn=document.createElement('button');
+    btn.className='qchip'; btn.textContent=p.label;
+    btn.onclick=()=>{
+      document.querySelectorAll('.qchip').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      activeQchip=p.label;
+      if(p.from){ document.getElementById('dt-from').value=dateStr(p.from); dtFrom=p.from; }
+      else       { document.getElementById('dt-from').value=''; dtFrom=null; }
+      if(p.to)  { document.getElementById('dt-to').value=dateStr(p.to);   dtTo=p.to; }
+      else      { document.getElementById('dt-to').value='';   dtTo=null; }
+      render();
+    };
+    row.appendChild(btn);
+  });
+}
 
+function onDateChange(){
+  document.querySelectorAll('.qchip').forEach(c=>c.classList.remove('active'));
+  activeQchip=null;
+  dtFrom=parseLocalDate(document.getElementById('dt-from').value);
+  dtTo  =parseLocalDate(document.getElementById('dt-to').value);
+  render();
+}
+function resetDate(){
+  document.getElementById('dt-from').value='';
+  document.getElementById('dt-to').value='';
+  document.querySelectorAll('.qchip').forEach(c=>c.classList.remove('active'));
+  dtFrom=null; dtTo=null;
+  render();
+}
+
+/* ══════════════════════════════════════════════
+   FILTER
+══════════════════════════════════════════════ */
+function filtered(){
+  return ALL.filter(r=>{
+    if(dtFrom && r.date < dtFrom) return false;
+    if(dtTo){
+      const end=new Date(dtTo); end.setHours(23,59,59);
+      if(r.date > end) return false;
+    }
+    return true;
+  });
+}
+
+/* ══════════════════════════════════════════════
+   SPARKLINE
+══════════════════════════════════════════════ */
+function mkSpark(id, data, color){
+  if(CHARTS[id])CHARTS[id].destroy();
+  CHARTS[id]=new Chart(document.getElementById(id),{
+    type:'line',
+    data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:color,borderWidth:1.5,pointRadius:0,fill:true,
+      backgroundColor:color+'22',tension:.4}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false}}}
+  });
+}
+
+/* ══════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════ */
 function mkChart(id,cfg){
   if(CHARTS[id])CHARTS[id].destroy();
   CHARTS[id]=new Chart(document.getElementById(id),cfg);
 }
 
-function showNotice(id,html){
-  ['notice-demo','notice-live','notice-error'].forEach(n=>{
-    const el=document.getElementById(n);
-    if(n===id){el.innerHTML=html;el.classList.add('show');}
-    else el.classList.remove('show');
-  });
-}
+const MONTH_ABBR=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-/* ══════════════════════════════════════
-   COLUMN FINDER  — very permissive matching
-══════════════════════════════════════ */
-function findCol(cols, ...hints){
-  for(const hint of hints){
-    // exact match first (case-insensitive)
-    let i=cols.findIndex(c=>c.fieldName.toLowerCase()===hint.toLowerCase());
-    if(i>=0){log('  ✓ matched "'+cols[i].fieldName+'" for hint "'+hint+'"');return i;}
-    // contains match
-    i=cols.findIndex(c=>c.fieldName.toLowerCase().includes(hint.toLowerCase()));
-    if(i>=0){log('  ~ partial match "'+cols[i].fieldName+'" for hint "'+hint+'"');return i;}
-  }
-  log('  ✗ NO MATCH for hints: '+hints.join(', '));
-  return -1;
-}
-
-/* ══════════════════════════════════════
-   PILLS & FILTERS
-══════════════════════════════════════ */
-function buildPills(cid,vals,key){
-  const c=document.getElementById(cid);c.innerHTML='';
-  vals.forEach(v=>{
-    const p=document.createElement('span');
-    p.className='pill active';p.textContent=v;p.dataset.val=v;
-    p.onclick=()=>{
-      if(SEL[key].has(v)&&SEL[key].size>1){SEL[key].delete(v);p.classList.remove('active');}
-      else if(!SEL[key].has(v)){SEL[key].add(v);p.classList.add('active');}
-      renderDashboard();
-    };
-    c.appendChild(p);
-  });
-}
-function resetFilters(){
-  Object.keys(SEL).forEach(k=>SEL[k]=new Set(UNIQUE[k]));
-  document.querySelectorAll('.pill').forEach(p=>p.classList.add('active'));
-  renderDashboard();
-}
-function filtered(){return ALL_DATA.filter(d=>SEL.region.has(d.region)&&SEL.segment.has(d.segment)&&SEL.category.has(d.cat)&&SEL.ship.has(d.ship));}
-
-/* ══════════════════════════════════════
-   RENDER
-══════════════════════════════════════ */
-function renderDashboard(){
+function render(){
   const d=filtered();
+
+  /* date range label */
+  const allDates=d.map(r=>r.date).filter(Boolean).sort((a,b)=>a-b);
+  if(allDates.length>=2){
+    const s=allDates[0], e=allDates[allDates.length-1];
+    document.getElementById('date-range-display').textContent=
+      `Showing ${d.length.toLocaleString()} records · ${MONTH_ABBR[s.getMonth()]} ${s.getFullYear()} → ${MONTH_ABBR[e.getMonth()]} ${e.getFullYear()}`;
+  } else {
+    document.getElementById('date-range-display').textContent='All dates · '+d.length.toLocaleString()+' records';
+  }
+
+  /* KPIs */
   const totS=d.reduce((a,b)=>a+b.sales,0);
   const totP=d.reduce((a,b)=>a+b.profit,0);
   const totQ=d.reduce((a,b)=>a+b.qty,0);
   const avgD=d.length?d.reduce((a,b)=>a+b.discount,0)/d.length:0;
   const mg=totS?totP/totS:0;
 
-  document.getElementById('kpi-sales').textContent=fmtM(totS);
-  document.getElementById('kpi-profit').textContent=fmtM(totP);
-  document.getElementById('kpi-orders').textContent=fmtNum(totQ);
-  document.getElementById('kpi-disc').textContent=fmtPct(avgD);
-  document.getElementById('kpi-sales-sub').textContent=fmtNum(d.length)+' rows';
-  document.getElementById('kpi-profit-sub').textContent='Margin: '+(mg>=0?'+':'')+fmtPct(mg);
-  document.getElementById('kpi-profit-sub').style.color=mg>=0?C.teal:C.coral;
-  document.getElementById('kpi-orders-sub').textContent='Total units sold';
-  document.getElementById('kpi-disc-sub').textContent='Average across selection';
+  document.getElementById('kv-sales').textContent=fmtM(totS);
+  document.getElementById('kv-profit').textContent=fmtM(totP);
+  document.getElementById('kv-qty').textContent=fmtN(totQ);
+  document.getElementById('kv-disc').textContent=fmtPct(avgD);
 
-  /* aggregate by sub-cat */
-  const scMap={};
+  const pd=document.getElementById('kd-profit');
+  pd.textContent=(mg>=0?'▲ +':'▼ ')+fmtPct(mg)+' margin';
+  pd.className='kpi-delta '+(mg>=0?'pos':'neg');
+  document.getElementById('km-sales').textContent='gross revenue';
+  document.getElementById('km-profit').textContent='';
+  document.getElementById('kd-sales').textContent='● '+fmtN(d.length)+' rows';
+  document.getElementById('kd-qty').textContent='▲ units';
+  document.getElementById('kd-disc').textContent='▼ avg rate';
+  document.getElementById('km-qty').textContent='total units';
+  document.getElementById('km-disc').textContent='across orders';
+
+  /* Sparklines: monthly buckets */
+  const mBuckets={};
   d.forEach(r=>{
-    if(!scMap[r.subcat])scMap[r.subcat]={sales:0,profit:0,qty:0,discount:0,cnt:0,cat:r.cat};
-    scMap[r.subcat].sales+=r.sales;scMap[r.subcat].profit+=r.profit;
-    scMap[r.subcat].qty+=r.qty;scMap[r.subcat].discount+=r.discount;scMap[r.subcat].cnt++;
+    if(!r.date)return;
+    const k=r.date.getFullYear()*100+r.date.getMonth();
+    if(!mBuckets[k])mBuckets[k]={s:0,p:0,q:0,disc:0,cnt:0};
+    mBuckets[k].s+=r.sales; mBuckets[k].p+=r.profit;
+    mBuckets[k].q+=r.qty;   mBuckets[k].disc+=r.discount; mBuckets[k].cnt++;
   });
-  const sc=Object.entries(scMap).sort((a,b)=>b[1].sales-a[1].sales);
-  document.getElementById('subcat-count').textContent=sc.length+' items';
-  document.getElementById('tbl-count').textContent=sc.length+' sub-categories';
+  const mKeys=Object.keys(mBuckets).sort();
+  if(mKeys.length>1){
+    mkSpark('sp-sales', mKeys.map(k=>mBuckets[k].s),   C.gold);
+    mkSpark('sp-profit',mKeys.map(k=>mBuckets[k].p),   C.teal);
+    mkSpark('sp-qty',   mKeys.map(k=>mBuckets[k].q),   C.purple);
+    mkSpark('sp-disc',  mKeys.map(k=>mBuckets[k].disc/mBuckets[k].cnt), C.rose);
+  }
 
-  /* bar */
-  const barH=Math.max(240,sc.length*28+70);
-  document.getElementById('subcat-wrap').style.height=barH+'px';
-  mkChart('subcat-chart',{type:'bar',data:{labels:sc.map(x=>x[0]),datasets:[
-    {label:'Sales',data:sc.map(x=>x[1].sales),backgroundColor:C.blue,borderRadius:3,barThickness:10},
-    {label:'Profit',data:sc.map(x=>x[1].profit),backgroundColor:sc.map(x=>x[1].profit>=0?C.teal:C.coral),borderRadius:3,barThickness:10}
-  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:true,position:'top',labels:{boxWidth:10,font:{size:11},padding:12}},
-      tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtM(ctx.parsed.x)}}},
-    scales:{x:{ticks:{callback:v=>fmtM(v),font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
-            y:{ticks:{font:{size:11}},grid:{display:false}}}}});
+  /* Trend chart: monthly sales + profit lines */
+  document.getElementById('trend-sub').textContent=mKeys.length+' months';
+  const tLabels=mKeys.map(k=>{const y=Math.floor(k/100),m=k%100;return MONTH_ABBR[m]+' '+String(y).slice(2);});
+  mkChart('trend-chart',{
+    type:'line',
+    data:{labels:tLabels,datasets:[
+      {label:'Sales', data:mKeys.map(k=>mBuckets[k].s),
+       borderColor:C.gold,backgroundColor:C.gold+'18',fill:true,
+       borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.4},
+      {label:'Profit',data:mKeys.map(k=>mBuckets[k].p),
+       borderColor:C.teal,backgroundColor:C.teal+'18',fill:true,
+       borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.4,borderDash:[]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      animation:{duration:500},
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',
+          labels:{color:'#7a7a8a',boxWidth:8,font:{size:10},padding:16}},
+        tooltip:{
+          backgroundColor:'#1c1c22',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+          titleColor:'#f4f1ec',bodyColor:'#7a7a8a',
+          callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtM(ctx.parsed.y)}
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#555560',font:{size:9},maxTicksLimit:12,maxRotation:0},
+           grid:{color:'rgba(255,255,255,.04)'},border:{color:'rgba(255,255,255,.06)'}},
+        y:{ticks:{color:'#555560',font:{size:9},callback:v=>fmtM(v)},
+           grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}
+      }
+    }
+  });
 
-  /* scatter */
-  mkChart('scatter-chart',{type:'scatter',data:{datasets:sc.map(([k,v],i)=>({
-    label:k,data:[{x:v.sales,y:v.profit}],backgroundColor:PAL[i%PAL.length],pointRadius:8,pointHoverRadius:11
-  }))},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmtM(ctx.parsed.x)} sales · ${fmtM(ctx.parsed.y)} profit`}}},
-    scales:{x:{title:{display:true,text:'Sales',font:{size:11}},ticks:{callback:v=>fmtM(v),font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
-            y:{title:{display:true,text:'Profit',font:{size:11}},ticks:{callback:v=>fmtM(v),font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}});
+  /* Category donut */
+  const catMap={};
+  d.forEach(r=>catMap[r.cat]=(catMap[r.cat]||0)+r.sales);
+  const ck=Object.keys(catMap).sort((a,b)=>catMap[b]-catMap[a]);
+  const catCols={'Technology':C.gold,'Furniture':C.rose,'Office Supplies':C.teal};
+  mkChart('cat-chart',{
+    type:'doughnut',
+    data:{labels:ck,datasets:[{
+      data:ck.map(k=>catMap[k]),
+      backgroundColor:ck.map(k=>catCols[k]||C.purple),
+      borderColor:'#141418',borderWidth:3,hoverOffset:6
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+      animation:{duration:500},
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#7a7a8a',boxWidth:8,font:{size:10},padding:12}},
+        tooltip:{
+          backgroundColor:'#1c1c22',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+          titleColor:'#f4f1ec',bodyColor:'#7a7a8a',
+          callbacks:{label:ctx=>' '+ctx.label+': '+fmtM(ctx.parsed)}
+        }
+      }
+    }
+  });
 
-  /* cat donut */
-  const catMap={};d.forEach(r=>catMap[r.cat]=(catMap[r.cat]||0)+r.sales);
-  const ck=Object.keys(catMap);
-  mkChart('cat-chart',{type:'doughnut',data:{labels:ck,datasets:[{data:ck.map(k=>catMap[k]),backgroundColor:ck.map(k=>CAT_C[k]||C.gray),borderWidth:2,borderColor:'#F7F8FA',hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:9,padding:8}},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+fmtM(ctx.parsed)}}}}});
-
-  /* region donut */
-  const regMap={};d.forEach(r=>regMap[r.region]=(regMap[r.region]||0)+r.sales);
-  const rk=Object.keys(regMap);
-  mkChart('region-chart',{type:'doughnut',data:{labels:rk,datasets:[{data:rk.map(k=>regMap[k]),backgroundColor:rk.map(k=>REG_C[k]||C.gray),borderWidth:2,borderColor:'#F7F8FA',hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:9,padding:8}},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+fmtM(ctx.parsed)}}}}});
-
-  /* segment bars */
-  const segMap={};d.forEach(r=>segMap[r.segment]=(segMap[r.segment]||0)+r.profit);
-  const sk=Object.keys(segMap);const mx=Math.max(...sk.map(s=>Math.abs(segMap[s])))||1;
-  document.getElementById('seg-bars').innerHTML=sk.map(s=>{
-    const p=segMap[s],pct=(Math.abs(p)/mx*100).toFixed(1),col=p>=0?C.teal:C.coral;
-    return`<div class="seg-row"><span class="seg-label">${s}</span><div class="seg-track"><div class="seg-fill" style="width:${pct}%;background:${col}"></div></div><span class="seg-val">${fmtM(p)}</span></div>`;
+  /* Sub-cat profit bars */
+  const scMap={};
+  d.forEach(r=>{if(!scMap[r.subcat])scMap[r.subcat]={p:0,s:0};scMap[r.subcat].p+=r.profit;scMap[r.subcat].s+=r.sales;});
+  const scArr=Object.entries(scMap).sort((a,b)=>b[1].p-a[1].p).slice(0,10);
+  const maxAbs=Math.max(...scArr.map(x=>Math.abs(x[1].p)))||1;
+  document.getElementById('subcat-bars').innerHTML=scArr.map(([name,v])=>{
+    const pct=(Math.abs(v.p)/maxAbs*100).toFixed(1);
+    const col=v.p>=0?C.teal:C.rose;
+    return`<div class="bar-row">
+      <span class="bar-name" title="${name}">${name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div>
+      <span class="bar-val">${fmtM(v.p)}</span>
+    </div>`;
   }).join('');
 
-  /* table */
-  document.getElementById('top-tbody').innerHTML=sc.map(([name,v],i)=>{
-    const mg2=v.sales?v.profit/v.sales:0,avgD2=v.cnt?v.discount/v.cnt:0;
-    return`<tr>
-      <td style="color:var(--muted);font-weight:600">${i+1}</td>
-      <td style="font-weight:600">${name}</td>
-      <td><span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${CAT_C[v.cat]||C.gray}22;color:${CAT_C[v.cat]||C.gray};font-weight:600">${v.cat}</span></td>
-      <td>${fmtM(v.sales)}</td>
-      <td><span class="badge ${v.profit>=0?'badge-pos':'badge-neg'}">${fmtM(v.profit)}</span></td>
-      <td style="color:${mg2>=0?C.teal:C.coral};font-weight:600">${(mg2>=0?'+':'')+fmtPct(mg2)}</td>
-      <td>${fmtNum(v.qty)}</td>
-      <td>${fmtPct(avgD2)}</td>
-    </tr>`;
-  }).join('');
+  /* Region bars */
+  const regMap={};
+  d.forEach(r=>regMap[r.region]=(regMap[r.region]||0)+r.sales);
+  const rk=Object.keys(regMap).sort((a,b)=>regMap[b]-regMap[a]);
+  const regCols={'West':C.gold,'East':C.purple,'Central':C.blue,'South':C.teal};
+  mkChart('region-chart',{
+    type:'bar',
+    data:{labels:rk,datasets:[{
+      data:rk.map(k=>regMap[k]),
+      backgroundColor:rk.map(k=>regCols[k]||C.muted),
+      borderRadius:4, barThickness:28
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      indexAxis:'y', animation:{duration:500},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1c1c22',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+          titleColor:'#f4f1ec',bodyColor:'#7a7a8a',
+          callbacks:{label:ctx=>' Sales: '+fmtM(ctx.parsed.x)}
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#555560',font:{size:9},callback:v=>fmtM(v)},
+           grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+        y:{ticks:{color:'#7a7a8a',font:{size:11}},
+           grid:{display:false},border:{color:'rgba(255,255,255,.06)'}}
+      }
+    }
+  });
 }
 
-/* ══════════════════════════════════════
-   INIT FROM DATA
-══════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
 function initDashboard(){
-  UNIQUE.region  =[...new Set(ALL_DATA.map(d=>d.region))].filter(Boolean).sort();
-  UNIQUE.segment =[...new Set(ALL_DATA.map(d=>d.segment))].filter(Boolean).sort();
-  UNIQUE.category=[...new Set(ALL_DATA.map(d=>d.cat))].filter(Boolean).sort();
-  UNIQUE.ship    =[...new Set(ALL_DATA.map(d=>d.ship))].filter(Boolean).sort();
-  log('Unique values — region:'+UNIQUE.region+' | segment:'+UNIQUE.segment+' | category:'+UNIQUE.category+' | ship:'+UNIQUE.ship);
-  Object.keys(SEL).forEach(k=>SEL[k]=new Set(UNIQUE[k]));
-  buildPills('region-pills',  UNIQUE.region,  'region');
-  buildPills('segment-pills', UNIQUE.segment, 'segment');
-  buildPills('category-pills',UNIQUE.category,'category');
-  buildPills('ship-pills',    UNIQUE.ship,    'ship');
-  renderDashboard();
+  buildQuickPicks();
+  /* Set default date range to full span */
+  const dates=ALL.map(r=>r.date).filter(Boolean).sort((a,b)=>a-b);
+  if(dates.length){
+    document.getElementById('dt-from').value=dateStr(dates[0]);
+    document.getElementById('dt-to').value=dateStr(dates[dates.length-1]);
+    dtFrom=dates[0]; dtTo=dates[dates.length-1];
+  }
+  render();
 }
 
-/* ══════════════════════════════════════
-   TABLEAU EXTENSIONS API
-══════════════════════════════════════ */
-async function loadFromTableau(){
+/* ══════════════════════════════════════════════
+   COLUMN FINDER
+══════════════════════════════════════════════ */
+function findCol(cols,...hints){
+  for(const h of hints){
+    let i=cols.findIndex(c=>c.fieldName.toLowerCase()===h.toLowerCase());
+    if(i>=0){log('✓ "'+cols[i].fieldName+'" matched "'+h+'"');return i;}
+    i=cols.findIndex(c=>c.fieldName.toLowerCase().includes(h.toLowerCase()));
+    if(i>=0){log('~ partial "'+cols[i].fieldName+'" for "'+h+'"');return i;}
+  }
+  log('✗ no match for: '+hints.join(', '));return -1;
+}
+
+function showNotice(cls,msg){
+  const el=document.getElementById('notice');
+  el.className='show '+cls; el.innerHTML=msg;
+}
+
+/* ══════════════════════════════════════════════
+   TABLEAU BOOTSTRAP
+══════════════════════════════════════════════ */
+async function boot(){
   try{
-    log('Calling tableau.extensions.initializeAsync()…');
+    log('initializeAsync…');
     await tableau.extensions.initializeAsync();
-    log('✓ Initialized');
-
+    log('✓ init');
     const dash=tableau.extensions.dashboardContent.dashboard;
-    log('Dashboard name: '+dash.name);
-    log('Worksheets found: '+dash.worksheets.length);
-    dash.worksheets.forEach((ws,i)=>log('  ['+i+'] '+ws.name));
+    log('dashboard: '+dash.name+' | sheets: '+dash.worksheets.length);
+    dash.worksheets.forEach((w,i)=>log('  ['+i+'] '+w.name));
 
-    document.getElementById('data-source-name').textContent=dash.name+' · Live';
+    document.getElementById('data-source-name-lbl') && (document.getElementById('data-source-name-lbl').textContent=dash.name);
 
-    /* try each worksheet until one gives us usable data */
     let loaded=false;
     for(let wi=0;wi<dash.worksheets.length;wi++){
       const ws=dash.worksheets[wi];
-      log('Trying worksheet ['+wi+']: '+ws.name);
+      log('trying ['+wi+']: '+ws.name);
       try{
-        const dt=await ws.getSummaryDataAsync({maxRows:100000});
-        log('Rows returned: '+dt.data.length);
-        log('Columns ('+dt.columns.length+'): '+dt.columns.map(c=>'"'+c.fieldName+'"').join(', '));
-
-        if(dt.data.length===0){log('  → empty, skipping');continue;}
+        const dt=await ws.getSummaryDataAsync({maxRows:200000});
+        log('rows: '+dt.data.length+' cols: '+dt.columns.length);
+        log('columns: '+dt.columns.map(c=>'"'+c.fieldName+'"').join(', '));
+        if(!dt.data.length){log('empty');continue;}
 
         const cols=dt.columns;
-        /* ── Find every needed column ── */
-        const iSubcat  = findCol(cols,'Sub-Category','SubCategory','sub-category','subcat','Sub Category');
-        const iCat     = findCol(cols,'Category','category');
-        const iRegion  = findCol(cols,'Region','region');
-        const iSeg     = findCol(cols,'Segment','segment');
-        const iShip    = findCol(cols,'Ship Mode','ShipMode','ship-mode','Ship_Mode');
-        const iSales   = findCol(cols,'Sales','sales');
-        const iProfit  = findCol(cols,'Profit','profit');
-        const iQty     = findCol(cols,'Quantity','Qty','quantity','qty');
-        const iDisc    = findCol(cols,'Discount','discount');
+        const iDate   =findCol(cols,'Order Date','order date','orderdate','Date','date','Ship Date');
+        const iSubcat =findCol(cols,'Sub-Category','SubCategory','sub-category','Sub Category','subcat');
+        const iCat    =findCol(cols,'Category','category','cat');
+        const iRegion =findCol(cols,'Region','region');
+        const iSeg    =findCol(cols,'Segment','segment');
+        const iShip   =findCol(cols,'Ship Mode','ship mode','ShipMode','ship_mode');
+        const iSales  =findCol(cols,'Sales','sales');
+        const iProfit =findCol(cols,'Profit','profit');
+        const iQty    =findCol(cols,'Quantity','quantity','qty');
+        const iDisc   =findCol(cols,'Discount','discount');
 
-        log('Column indices → subcat:'+iSubcat+' cat:'+iCat+' region:'+iRegion+' seg:'+iSeg+' ship:'+iShip+' sales:'+iSales+' profit:'+iProfit+' qty:'+iQty+' disc:'+iDisc);
+        if(iSales<0){log('no Sales col, skip');continue;}
 
-        /* require at least sales + one dimension */
-        if(iSales<0){log('  → Sales column not found, skipping');continue;}
-
-        ALL_DATA=dt.data.map(r=>{
-          function val(i){if(i<0)return null;const v=r[i];return v==null?null:(typeof v==='object'?v.value:v);}
-          function num(i){const v=val(i);return v==null||v===''||v==='Null'?0:parseFloat(v)||0;}
-          function str(i){const v=val(i);return v==null||v===''||v==='Null'?'Unknown':String(v);}
+        ALL=dt.data.map(r=>{
+          function raw(i){if(i<0)return null;const v=r[i];return v==null?null:(typeof v==='object'&&'value' in v?v.value:v);}
+          function num(i){const v=raw(i);return(v==null||v===''||v==='Null')?0:parseFloat(v)||0;}
+          function str(i){const v=raw(i);return(v==null||v===''||v==='Null')?'Unknown':String(v);}
+          function dt2(i){
+            const v=raw(i);
+            if(!v||v==='Null')return null;
+            // Tableau dates can be strings like "2014-01-03T00:00:00.000Z" or "01/03/2014"
+            const d=new Date(v);
+            return isNaN(d.getTime())?null:d;
+          }
           return{
-            subcat :str(iSubcat),
-            cat    :str(iCat),
-            region :str(iRegion),
-            segment:str(iSeg),
-            ship   :str(iShip),
-            sales  :num(iSales),
-            profit :num(iProfit),
-            qty    :num(iQty)||1,
-            discount:num(iDisc)
+            date:dt2(iDate),
+            year:null, month:null,
+            subcat:str(iSubcat), cat:str(iCat), region:str(iRegion),
+            segment:str(iSeg), ship:str(iShip),
+            sales:num(iSales), profit:num(iProfit),
+            qty:Math.max(1,num(iQty)||1), discount:num(iDisc)
           };
         });
+        ALL.forEach(r=>{if(r.date){r.year=r.date.getFullYear();r.month=r.date.getMonth();}});
 
-        log('✓ Parsed '+ALL_DATA.length+' rows from "'+ws.name+'"');
-        log('Sample row 0: '+JSON.stringify(ALL_DATA[0]));
+        log('✓ parsed '+ALL.length+' rows from '+ws.name);
+        log('sample: '+JSON.stringify(ALL[0]));
 
-        document.getElementById('status-badge').textContent='✓ Live: '+ws.name;
-        document.getElementById('status-badge').classList.add('connected');
-        showNotice('notice-live','✓ Live data connected from worksheet <strong>'+ws.name+'</strong> — '+fmtNum(ALL_DATA.length)+' rows loaded.');
-        loaded=true;
-        break;
-
-      }catch(wsErr){log('  → Error on worksheet '+ws.name+': '+wsErr.message);}
+        const pill=document.getElementById('conn-pill');
+        pill.textContent='● Live · '+ws.name;pill.className='live';
+        showNotice('live','✓ Live data from <strong>'+ws.name+'</strong> — '+ALL.length.toLocaleString()+' rows');
+        loaded=true; break;
+      }catch(e){log('ws error: '+e.message);}
     }
-
-    if(!loaded) throw new Error('No worksheet returned usable data');
+    if(!loaded)throw new Error('no usable worksheet');
 
   }catch(err){
-    log('⚠ Tableau API failed: '+err.message);
-    log('Falling back to demo data');
-    document.getElementById('status-badge').textContent='⚠ Demo mode';
-    document.getElementById('data-source-name').textContent='Sample Superstore Data';
-    showNotice('notice-demo','⚠ <strong>Demo mode:</strong> Could not read live Tableau data ('+err.message+'). Showing built-in sample data. Click 🔍 Debug for details.');
-    ALL_DATA=DEMO;
-  }finally{
-    document.getElementById('loading').style.display='none';
+    log('⚠ fallback: '+err.message);
+    ALL=DEMO_ROWS;
+    const pill=document.getElementById('conn-pill');
+    pill.textContent='● Demo'; pill.className='demo';
+    showNotice('demo','⚠ <strong>Demo mode</strong> — sample Superstore data. Connect via Tableau Desktop to load live data. <em>Click Debug for details.</em>');
   }
+
+  document.getElementById('boot').classList.add('gone');
   initDashboard();
 }
 
-loadFromTableau();
+boot();
 </script>
 </body>
 </html>
